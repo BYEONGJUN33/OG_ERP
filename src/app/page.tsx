@@ -1,9 +1,12 @@
-import { CalendarEmbed } from "@/components/calendar-embed";
+import Link from "next/link";
+
+import { EventList } from "@/components/event-list";
 import { ProgramCards } from "@/components/program-cards";
 import { TodoAddForm } from "@/components/todo-add-form";
 import { TodoList } from "@/components/todo-list";
 import { MEMBERS } from "@/config/users";
 import { getPrograms } from "@/lib/airtable/programs";
+import { getEvents } from "@/lib/calendar/events";
 import { getCompletedToday, getOpenTodos } from "@/lib/airtable/todos";
 import { auth, signOut } from "@/lib/auth";
 import { todayInSeoul } from "@/lib/date";
@@ -26,12 +29,18 @@ export default async function Home() {
   const session = await auth();
   const member = session?.user.member ?? null;
 
-  const [programs, open, done] = await Promise.all([
+  // 오늘 하루만 본다. 전체 달력은 /calendar 에 있다.
+  const today = todayInSeoul();
+  const dayStart = new Date(`${today}T00:00:00+09:00`);
+  const dayEnd = new Date(`${today}T23:59:59+09:00`);
+
+  const [programs, open, done, events] = await Promise.all([
     getPrograms(),
     member ? getOpenTodos() : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
     member
       ? getCompletedToday()
       : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
+    getEvents(dayStart, dayEnd),
   ]);
 
   const { mine, team } = splitByOwner(open, member);
@@ -42,7 +51,7 @@ export default async function Home() {
         <div>
           <h1 className="text-2xl font-semibold">오늘</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            {todayInSeoul()}
+            {today}
             {member ? ` · ${member}님` : ""}
           </p>
         </div>
@@ -92,17 +101,35 @@ export default async function Home() {
         <ProgramCards result={programs} />
       </Section>
 
-      <Section title="캘린더">
-        <CalendarEmbed viewerEmail={session?.user.email} />
+      <Section
+        title="오늘 일정"
+        action={
+          <Link href="/calendar" className="text-xs text-neutral-500 hover:text-neutral-900">
+            달력 보기 →
+          </Link>
+        }
+      >
+        <EventList result={events} emptyMessage="오늘 잡힌 일정이 없다." />
       </Section>
     </main>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-medium text-neutral-500">{title}</h2>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-medium text-neutral-500">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );

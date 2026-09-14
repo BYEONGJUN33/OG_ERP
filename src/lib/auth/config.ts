@@ -1,23 +1,77 @@
 import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
+import type { JWT } from "@auth/core/jwt";
 
 import { memberNameOf } from "@/config/users";
 import { GOOGLE_SCOPE_PARAM } from "@/lib/auth/scopes";
 
-const ALLOWED_HD = process.env.ALLOWED_HD ?? "open-garden.co.kr";
+const ALLOWED_HD = process.env.ALLOWED_HD?.trim() ?? "open-garden.co.kr";
+
+/** 만료 1분 전부터 갱신한다. 경계에서 아슬아슬하게 실패하는 걸 막는다. */
+const REFRESH_MARGIN_MS = 60_000;
+
+/**
+ * 구글 액세스 토큰은 한 시간이면 만료된다.
+ * 세션은 그보다 오래 살아 있으므로 refresh token으로 조용히 갱신한다.
+ * 갱신에 실패하면 토큰을 비우고 다시 로그인하게 둔다 — 깨진 토큰으로
+ * 계속 시도하면 원인 모를 에러만 반복된다.
+ */
+async function refresh(token: JWT): Promise<JWT> {
+  if (!token.refreshToken) {
+    return { ...token, accessToken: undefined, tokenError: "no_refresh_token" };
+  }
+
+  try {
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.AUTH_GOOGLE_ID?.trim() ?? "",
+        client_secret: process.env.AUTH_GOOGLE_SECRET?.trim() ?? "",
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken,
+      }),
+      cache: "no-store",
+    });
+
+    const body = (await response.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      refresh_token?: string;
+    };
+
+    if (!response.ok || !body.access_token) {
+      return { ...token, accessToken: undefined, tokenError: "refresh_failed" };
+    }
+
+    return {
+      ...token,
+      accessToken: body.access_token,
+      expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000,
+      // 구글이 새 refresh token을 주는 경우가 있다. 주면 갈아끼운다.
+      refreshToken: body.refresh_token ?? token.refreshToken,
+      tokenError: undefined,
+    };
+  } catch {
+    return { ...token, accessToken: undefined, tokenError: "refresh_failed" };
+  }
+}
 
 export const authConfig = {
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: process.env.AUTH_GOOGLE_ID?.trim(),
+      clientSecret: process.env.AUTH_GOOGLE_SECRET?.trim(),
       authorization: {
         params: {
           // 구글 계정 선택 화면을 회사 도메인으로 제한한다.
           // 편의 기능일 뿐이므로 아래 signIn 에서 서버가 다시 검증한다.
           hd: ALLOWED_HD,
           scope: GOOGLE_SCOPE_PARAM,
-          prompt: "select_account",
+          // refresh token은 offline + consent 로 요청해야 확실히 온다.
+          // 동의 화면이 매번 뜨지만, 토큰이 만료된 채로 캘린더가 죽는 것보다 낫다.
+          access_type: "offline",
+          prompt: "consent",
         },
       },
     }),
@@ -39,12 +93,35 @@ export const authConfig = {
       if (!email.endsWith(`@${ALLOWED_HD}`)) return false;
       return memberNameOf(email) !== null;
     },
-    jwt({ token }) {
+
+    async jwt({ token, account }) {
       token.member = memberNameOf(token.email);
-      return token;
+
+      // 로그인 직후에만 account가 온다. 이때 토큰을 챙겨둔다.
+      if (account) {
+        return {
+          ...token,
+          accessToken: account.access_token,
+          refreshToken: account.refresh_token ?? token.refreshToken,
+          expiresAt: account.expires_at
+            ? account.expires_at * 1000
+            : Date.now() + 3600_000,
+          tokenError: undefined,
+        };
+      }
+
+      const expiresAt = token.expiresAt ?? 0;
+      if (token.accessToken && Date.now() < expiresAt - REFRESH_MARGIN_MS) {
+        return token;
+      }
+
+      return refresh(token);
     },
+
     session({ session, token }) {
       session.user.member = token.member ?? null;
+      session.accessToken = token.accessToken;
+      session.tokenError = token.tokenError;
       return session;
     },
   },

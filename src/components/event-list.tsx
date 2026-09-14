@@ -1,0 +1,66 @@
+import { EmptyState, ErrorState } from "@/components/data-state";
+import type { PortalEvent } from "@/lib/calendar/types";
+import type { Result } from "@/lib/result";
+
+const TYPE_STYLE: Record<string, string> = {
+  구글일정: "bg-sky-100 text-sky-800",
+  할일: "bg-neutral-100 text-neutral-700",
+};
+
+/** 시간 일정은 HH:mm, 종일 일정은 "종일" */
+export function eventTime(event: PortalEvent): string {
+  if (event.allDay) return "종일";
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(event.start));
+}
+
+export function EventList({
+  result,
+  emptyMessage = "일정이 없다.",
+}: {
+  result: Result<PortalEvent[]>;
+  emptyMessage?: string;
+}) {
+  if (!result.ok) return <ErrorState message={result.message} />;
+  if (result.data.length === 0) return <EmptyState message={emptyMessage} />;
+
+  return (
+    <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
+      {result.data.map((event) => (
+        <li key={event.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3">
+          <span className="w-12 shrink-0 text-xs text-neutral-500">
+            {eventTime(event)}
+          </span>
+          <span className="min-w-0 flex-1 text-sm">
+            {event.href ? (
+              <a
+                href={event.href}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:underline"
+              >
+                {event.title}
+              </a>
+            ) : (
+              event.title
+            )}
+          </span>
+          {event.location ? (
+            <span className="text-xs text-neutral-500">{event.location}</span>
+          ) : null}
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${
+              TYPE_STYLE[event.type] ?? TYPE_STYLE.할일
+            }`}
+          >
+            {event.type}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}

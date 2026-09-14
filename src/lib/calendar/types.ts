@@ -1,0 +1,41 @@
+/**
+ * 화면이 다루는 일정의 공통 모양.
+ * 출처가 달라도 화면은 이 타입 하나만 안다. (원칙 9)
+ *
+ * 새 출처를 더할 때 = `sources/`에 파일 하나 + 등록 한 줄.
+ * 그보다 많이 고쳐야 한다면 설계가 틀린 것이다.
+ */
+export type PortalEventType = "구글일정" | "할일" | "연차" | "휴가" | "출장";
+
+export type PortalEvent = {
+  id: string;
+  title: string;
+  /** 종일 일정은 YYYY-MM-DD, 시간 일정은 ISO */
+  start: string;
+  end?: string;
+  allDay: boolean;
+  source: "google" | "airtable";
+  type: PortalEventType;
+  owner?: string;
+  location?: string;
+  description?: string;
+  /** 원본으로 가는 링크 */
+  href?: string;
+};
+
+/** 한국 기준 날짜(YYYY-MM-DD). 달력 칸에 넣을 때 쓴다. */
+export function eventDate(value: string): string {
+  if (value.length === 10) return value; // 이미 YYYY-MM-DD
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
+}
+
+/** 시작 시각 순. 종일 일정이 먼저 온다. */
+export function byStart(a: PortalEvent, b: PortalEvent): number {
+  if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+  return a.start.localeCompare(b.start);
+}
