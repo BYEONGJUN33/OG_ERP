@@ -66,9 +66,15 @@ export function TodoTimeline({
             </div>
           </div>
 
-          <div style={{ minHeight: MIN_ROWS * ROW_PX }}>
+          <div
+            style={{
+              minHeight: MIN_ROWS * ROW_PX,
+              // 내용이 없는 아래쪽에도 날짜 칸과 줄이 이어지게 한다.
+              backgroundImage: `repeating-linear-gradient(to bottom, var(--color-line) 0 1px, transparent 1px ${ROW_PX}px), repeating-linear-gradient(to right, transparent 0 300px, var(--color-line) 300px 301px, transparent 301px ${300 + DAY_PX}px)`,
+            }}
+          >
           {drawn.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted">
+            <p className="bg-surface px-3 py-6 text-center text-sm text-muted">
               시작일과 마감일이 모두 있는 할 일이 없다.
             </p>
           ) : (
@@ -81,16 +87,23 @@ export function TodoTimeline({
               const color = categoryHex(todo.category);
 
               return (
-                <div key={todo.id} className="flex border-b border-line last:border-b-0">
-                  <div className="w-[300px] shrink-0 truncate border-r border-line px-3 py-2 text-[13px]">
+                <div key={todo.id} className="flex border-b border-line bg-surface">
+                  <div className="w-[300px] shrink-0 truncate border-r border-line px-3 text-[13px] leading-9">
                     <Link href={`/todos/${todo.id}`} className="hover:underline">
                       {todo.title}
                     </Link>
                   </div>
 
-                  <div className="relative flex-1" style={{ height: ROW_PX }}>
+                  <div
+                    className="relative flex-1"
+                    style={{
+                      height: ROW_PX,
+                      // 날짜 칸 세로선
+                      backgroundImage: `repeating-linear-gradient(to right, var(--color-line) 0 1px, transparent 1px ${DAY_PX}px)`,
+                    }}
+                  >
                     <div
-                      className="absolute top-0 bottom-0 w-px bg-brand-600"
+                      className="absolute top-0 bottom-0 z-10 w-px bg-brand-600"
                       style={{ left: daysBetween(first, today) * DAY_PX }}
                     />
                     <div

@@ -29,15 +29,18 @@ export function TodoAddButton({
         {small ? "+ 추가" : label}
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="할 일 추가" width="max-w-xl">
-        <div className="p-5">
-          <TodoAddForm
-            members={members}
-            defaultOwner={defaultOwner}
-            stacked
-            onDone={() => setOpen(false)}
-          />
-        </div>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="할 일 만들기"
+        width="max-w-xl"
+      >
+        <TodoAddForm
+          members={members}
+          defaultOwner={defaultOwner}
+          stacked
+          onDone={() => setOpen(false)}
+        />
       </Modal>
     </>
   );

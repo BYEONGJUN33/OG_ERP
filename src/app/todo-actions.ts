@@ -54,6 +54,7 @@ export async function addTodoAction(
     author,
     start: start || null,
     due: due || null,
+    memo: String(formData.get("memo") ?? "").trim(),
     category: (TODO_CATEGORIES as readonly string[]).includes(category)
       ? (category as TodoCategory)
       : null,

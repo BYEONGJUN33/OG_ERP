@@ -56,7 +56,7 @@ export function Modal({
         className={`w-full ${width} rounded-[3px] bg-surface shadow-[0_20px_32px_-8px_rgba(9,30,66,0.25)]`}
       >
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
-          <span className="text-xs text-muted">{title}</span>
+          <span className="text-base font-semibold">{title}</span>
           <button
             type="button"
             onClick={onClose}

@@ -13,7 +13,9 @@ import type { Result } from "@/lib/result";
  * 종일 일정과 할 일 마감은 시간이 없으므로 맨 위 띠에 따로 모은다.
  */
 
-export const PX_PER_MIN = 44 / 60; // 한 시간 44px
+export const PX_PER_MIN = 52 / 60; // 한 시간 52px
+/** 정규 시간 앞뒤로 한 시간씩 더 보여준다. 경계에 딱 붙은 일정이 잘려 보이지 않게. */
+const PAD_HOURS = 1;
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -90,8 +92,8 @@ export function WeekCalendar({
     Math.ceil(minutesOfDay(event.end ?? event.start) / 60),
   );
   // 정규 시간이 기본 눈금이고, 그 밖에 일정이 있으면 넓힌다.
-  const fromHour = Math.min(WORK_START_HOUR, ...starts);
-  const toHour = Math.max(WORK_END_HOUR, ...ends);
+  const fromHour = Math.max(0, Math.min(WORK_START_HOUR - PAD_HOURS, ...starts));
+  const toHour = Math.min(24, Math.max(WORK_END_HOUR + PAD_HOURS, ...ends));
   const fromMin = fromHour * 60;
   const hours = Array.from({ length: toHour - fromHour }, (_, i) => fromHour + i);
   const bodyHeight = (toHour - fromHour) * 60 * PX_PER_MIN;
@@ -140,8 +142,8 @@ export function WeekCalendar({
         ))}
       </div>
 
-      {/* 시간 격자 */}
-      <div className="grid grid-cols-[44px_repeat(7,minmax(0,1fr))]">
+      {/* 시간 격자 — 길어지면 이 안에서만 스크롤된다 */}
+      <div className="grid max-h-[620px] grid-cols-[44px_repeat(7,minmax(0,1fr))] overflow-y-auto">
         <div>
           {hours.map((hour) => (
             <div

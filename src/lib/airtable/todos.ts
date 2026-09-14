@@ -157,6 +157,7 @@ export type NewTodo = {
   start: string | null;
   due: string | null;
   category: TodoCategory | null;
+  memo: string;
 };
 
 /** 할 일 추가. 새로 만든 것은 항상 '할 일' 상태로 시작한다. */
@@ -170,6 +171,7 @@ export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
     };
     if (input.start) fields.시작일 = input.start;
     if (input.due) fields.마감일 = input.due;
+    if (input.memo) fields.메모 = input.memo;
     if (input.category) fields.분류 = input.category;
 
     const record = await createRecord<Row>(TABLE, fields);

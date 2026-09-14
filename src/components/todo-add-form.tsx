@@ -5,6 +5,26 @@ import { useActionState, useRef } from "react";
 import { addTodoAction, type ActionState } from "@/app/todo-actions";
 import { TODO_CATEGORIES } from "@/lib/todo-types";
 
+function Field({
+  label,
+  required = false,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold text-muted">
+        {label}
+        {required ? <span className="ml-0.5 text-danger">*</span> : null}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 export function TodoAddForm({
   members,
   defaultOwner,
@@ -32,27 +52,40 @@ export function TodoAddForm({
 
   if (stacked) {
     return (
-      <form ref={form} action={action} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-muted">내용</span>
-          <input name="title" placeholder="할 일을 적어라" className="field" required />
-        </label>
+      <form ref={form} action={action}>
+        {/* 본문 — 한 열로 쌓는다. 칸마다 제목이 왼쪽 위에 붙는다. */}
+        <div className="flex flex-col gap-4 px-5 py-5">
+          <Field label="내용" required>
+            <input
+              name="title"
+              placeholder="할 일을 한 줄로"
+              className="field w-full"
+              required
+              autoFocus
+            />
+          </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-muted">담당자</span>
-            <select name="owner" defaultValue={defaultOwner} className="field">
+          <Field label="설명">
+            <textarea
+              name="memo"
+              rows={4}
+              placeholder="진행 상황, 참고 링크 등"
+              className="field w-full resize-y"
+            />
+          </Field>
+
+          <Field label="담당자">
+            <select name="owner" defaultValue={defaultOwner} className="field w-full">
               {members.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-muted">분류</span>
-            <select name="category" defaultValue="" className="field">
+          <Field label="분류">
+            <select name="category" defaultValue="" className="field w-full">
               <option value="">분류 없음</option>
               {TODO_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
@@ -60,25 +93,28 @@ export function TodoAddForm({
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-muted">시작일</span>
-            <input name="start" type="date" className="field" />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-muted">마감일</span>
-            <input name="due" type="date" className="field" />
-          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="시작일">
+              <input name="start" type="date" className="field w-full" />
+            </Field>
+            <Field label="마감일">
+              <input name="due" type="date" className="field w-full" />
+            </Field>
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3">
+        {/* 바닥 — 버튼은 오른쪽 아래 */}
+        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
           {state.error ? (
             <span className="mr-auto text-sm text-danger">{state.error}</span>
           ) : null}
+          <button type="button" onClick={onDone} className="btn">
+            취소
+          </button>
           <button type="submit" disabled={pending} className="btn-primary">
-            {pending ? "추가 중" : "추가"}
+            {pending ? "만드는 중" : "만들기"}
           </button>
         </div>
       </form>
