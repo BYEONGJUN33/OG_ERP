@@ -30,8 +30,12 @@ type Query = {
 
 export class AirtableError extends Error {}
 
+/**
+ * 환경변수. 앞뒤 공백을 떼고 쓴다 —
+ * 붙여넣을 때 딸려온 줄바꿈 하나 때문에 요청이 통째로 거절당한다.
+ */
 function env(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
   if (!value) throw new AirtableError(`환경변수 ${name}가 없다`);
   return value;
 }

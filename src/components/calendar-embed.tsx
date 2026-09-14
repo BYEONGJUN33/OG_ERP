@@ -21,7 +21,9 @@ function openCalendarUrl(calendarId: string): string {
  * 반복 일정·공휴일·알림은 구글이 담당한다. (원칙 9)
  */
 export function CalendarEmbed() {
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
+  // 환경변수는 붙여넣을 때 끝에 줄바꿈·공백이 딸려오기 쉽다.
+  // 그대로 주소에 넣으면 구글이 400으로 거절한다.
+  const calendarId = process.env.GOOGLE_CALENDAR_ID?.trim();
 
   if (!calendarId) {
     return <EmptyState message="캘린더가 아직 연결되지 않았다. GOOGLE_CALENDAR_ID를 설정해라." />;
@@ -30,6 +32,7 @@ export function CalendarEmbed() {
   // 캘린더 ID 자체가 잘못 들어간 경우를 눈으로 바로 가른다.
   // https:// 나 <iframe 이 들어 있으면 설정 화면에서 엉뚱한 값을 복사한 것이다.
   const looksWrong = /^https?:|<iframe|\s/.test(calendarId);
+
 
   const src = new URL("https://calendar.google.com/calendar/embed");
   src.searchParams.set("src", calendarId);
