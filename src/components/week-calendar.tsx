@@ -2,8 +2,8 @@ import { ErrorState } from "@/components/data-state";
 import { EventLink } from "@/components/event-link";
 import { NowLine } from "@/components/now-line";
 import { WORK_END_HOUR, WORK_START_HOUR } from "@/config/workday";
-import { minutesOfDay } from "@/lib/calendar/week";
-import { eventDate, type PortalEvent } from "@/lib/calendar/types";
+import { isoWeek, minutesOfDay } from "@/lib/calendar/week";
+import { eventDate, eventRange, type PortalEvent } from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
 /**
@@ -86,6 +86,24 @@ export function WeekCalendar({
   const timed = result.data.filter((event) => !event.allDay);
   const allDay = result.data.filter((event) => event.allDay);
 
+  // 종일 일정을 여러 날 막대로 놓는다. 겹치면 아래 줄로.
+  const first = days[0];
+  const last = days[6];
+  const lanesFilled: number[] = [];
+  const allDayBars = allDay
+    .map((event) => ({ event, ...eventRange(event) }))
+    .filter((span) => span.start <= last && span.end >= first)
+    .sort((a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end))
+    .map((span) => {
+      const from = Math.max(0, days.indexOf(span.start));
+      const to = span.end >= last ? 6 : days.indexOf(span.end);
+      let lane = lanesFilled.findIndex((filled) => filled < from);
+      if (lane === -1) lane = lanesFilled.length;
+      lanesFilled[lane] = to;
+      return { event: span.event, from, to, lane };
+    });
+  const allDayLanes = lanesFilled.length;
+
   // 일정이 눈금 밖에 있으면 눈금을 넓힌다. 안 보이는 일정이 있으면 안 된다.
   const starts = timed.map((event) => Math.floor(minutesOfDay(event.start) / 60));
   const ends = timed.map((event) =>
@@ -100,9 +118,12 @@ export function WeekCalendar({
 
   return (
     <div className="card overflow-hidden">
-      {/* 날짜 머리 */}
+      {/* 날짜 머리. 맨 앞에 주차 */}
       <div className="grid grid-cols-[44px_repeat(7,minmax(0,1fr))] border-b border-line bg-canvas">
-        <div />
+        <div className="flex flex-col items-center justify-center py-1.5">
+          <span className="text-[9px] font-bold text-faint">주차</span>
+          <span className="text-[13px] font-bold text-muted">{isoWeek(days[0])}</span>
+        </div>
         {days.map((day, index) => {
           const isToday = day === today;
           return (
@@ -120,26 +141,36 @@ export function WeekCalendar({
         })}
       </div>
 
-      {/* 종일 · 마감 띠 */}
+      {/* 종일 · 마감 띠 — 여러 날 걸친 것은 이어서 그린다 */}
       <div className="grid grid-cols-[44px_repeat(7,minmax(0,1fr))] border-b border-line">
         <div className="px-1 py-1 text-right text-[10px] text-faint">종일</div>
-        {days.map((day) => (
-          <div key={day} className="min-h-[26px] border-l border-line p-1">
-            <div className="flex flex-col gap-0.5">
-              {allDay
-                .filter((event) => eventDate(event.start) === day)
-                .map((event) => (
-                  <span
-                    key={event.id}
-                    className="truncate rounded-[2px] px-1 py-px text-[11px]"
-                    style={tint(event.color)}
-                  >
-                    <EventLink event={event} className="hover:underline" />
-                  </span>
-                ))}
-            </div>
+
+        <div className="relative col-span-7" style={{ minHeight: 26 + allDayLanes * 18 }}>
+          <div className="grid h-full grid-cols-7">
+            {days.map((day) => (
+              <div key={day} className="border-l border-line" />
+            ))}
           </div>
-        ))}
+
+          <div className="absolute inset-x-0 top-1">
+            {allDayBars.map((bar) => (
+              <div
+                key={bar.event.id}
+                title={bar.event.title}
+                className="absolute truncate px-1 text-[11px] leading-4"
+                style={{
+                  top: bar.lane * 18,
+                  left: `calc(${(bar.from / 7) * 100}% + 3px)`,
+                  width: `calc(${((bar.to - bar.from + 1) / 7) * 100}% - 6px)`,
+                  borderRadius: 2,
+                  ...tint(bar.event.color),
+                }}
+              >
+                <EventLink event={bar.event} className="hover:underline" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* 시간 격자 — 길어지면 이 안에서만 스크롤된다 */}

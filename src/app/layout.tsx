@@ -11,11 +11,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         {children}
+        {/* 카드를 눌러 연 할 일 창이 여기 뜬다. 평소에는 비어 있다. */}
+        {modal}
       </body>
     </html>
   );

@@ -44,3 +44,23 @@ export function byStart(a: PortalEvent, b: PortalEvent): number {
   if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
   return a.start.localeCompare(b.start);
 }
+
+/**
+ * 일정이 덮는 날짜 범위(양끝 포함).
+ *
+ * 구글의 종일 일정은 끝 날짜가 **다음 날**로 온다(9/14 하루짜리면 end=9/15).
+ * 그대로 쓰면 하루씩 길게 그려지므로 하루를 뺀다.
+ */
+export function eventRange(event: PortalEvent): { start: string; end: string } {
+  const start = eventDate(event.start);
+  if (!event.end) return { start, end: start };
+
+  let end = eventDate(event.end);
+  if (event.allDay) {
+    const previous = new Date(`${end}T00:00:00Z`);
+    previous.setUTCDate(previous.getUTCDate() - 1);
+    end = previous.toISOString().slice(0, 10);
+  }
+
+  return { start, end: end < start ? start : end };
+}

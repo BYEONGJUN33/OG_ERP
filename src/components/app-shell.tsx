@@ -21,7 +21,7 @@ export async function AppShell({
 
   return (
     <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5 px-4 py-5 sm:flex-row sm:gap-6">
-      <aside className="sm:w-[200px] sm:shrink-0 sm:border-r sm:border-line sm:pr-4">
+      <aside className="sm:sticky sm:top-5 sm:flex sm:h-[calc(100vh-40px)] sm:w-[200px] sm:shrink-0 sm:flex-col sm:border-r sm:border-line sm:pr-4">
         <div className="mb-4 flex items-center gap-2">
           <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-[3px] bg-brand-600 text-xs font-bold text-white">
             O
@@ -31,7 +31,7 @@ export async function AppShell({
 
         <Nav />
 
-        <div className="mt-4 flex items-center gap-2 border-t border-line pt-3.5">
+        <div className="mt-4 flex items-center gap-2 border-t border-line pt-3.5 sm:mt-auto">
           <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white">
             {session?.user.member?.slice(0, 1) ?? "?"}
           </span>

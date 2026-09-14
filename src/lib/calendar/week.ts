@@ -31,3 +31,22 @@ export function minutesOfDay(iso: string): number {
   const [h, m] = parts.split(":").map(Number);
   return h * 60 + m;
 }
+
+/**
+ * ISO 주차. 월요일이 주의 시작이고, 그 해 첫 목요일이 속한 주가 1주다.
+ * 한국 회사에서 쓰는 '몇 주차'가 이 규칙이다.
+ */
+export function isoWeek(date: string): number {
+  const day = new Date(`${date}T00:00:00Z`);
+  // 그 주의 목요일로 옮긴 뒤 연초부터 몇 번째 주인지 센다.
+  const weekday = (day.getUTCDay() + 6) % 7; // 월=0
+  day.setUTCDate(day.getUTCDate() - weekday + 3);
+
+  const firstThursday = new Date(Date.UTC(day.getUTCFullYear(), 0, 4));
+  const firstWeekday = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstWeekday + 3);
+
+  return (
+    1 + Math.round((day.getTime() - firstThursday.getTime()) / (7 * 86_400_000))
+  );
+}
