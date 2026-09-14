@@ -26,7 +26,7 @@ export async function addTodoAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireMember();
+  const author = await requireMember();
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "할 일 내용을 적어라." };
@@ -42,6 +42,7 @@ export async function addTodoAction(
   const result = await createTodo({
     title,
     owner: owner as MemberName,
+    author,
     due: due || null,
     category: (TODO_CATEGORIES as readonly string[]).includes(category)
       ? (category as TodoCategory)

@@ -7,7 +7,7 @@ import {
   updateRecord,
 } from "@/lib/airtable/client";
 import type { MemberName } from "@/config/users";
-import { todayInSeoul } from "@/lib/date";
+import { seoulDate, todayInSeoul } from "@/lib/date";
 import { fail, ok, type Result } from "@/lib/result";
 import {
   type Todo,
@@ -23,11 +23,13 @@ const TABLE = "tblczfuo7BoHcmQou";
 type Row = {
   내용: string;
   담당자: string;
+  시작일: string;
   마감일: string;
   상태: string;
   완료일시: string;
   분류: string;
   메모: string;
+  작성자: string;
 };
 
 
@@ -53,13 +55,26 @@ function toTodo(record: { id: string; fields: Partial<Row> }): Todo {
     title: record.fields.내용 ?? "(제목 없음)",
     owner: record.fields.담당자 ?? "",
     due: record.fields.마감일 ?? null,
+    start: record.fields.시작일 ?? null,
     status: (record.fields.상태 ?? "예정") as TodoStatus,
     category: record.fields.분류 ?? "",
     memo: record.fields.메모 ?? "",
+    completedAt: record.fields.완료일시 ?? null,
+    author: record.fields.작성자 ?? "",
   };
 }
 
-const OPEN_FIELDS = ["내용", "담당자", "마감일", "상태", "분류", "메모"];
+const FIELDS = [
+  "내용",
+  "담당자",
+  "시작일",
+  "마감일",
+  "상태",
+  "완료일시",
+  "분류",
+  "메모",
+  "작성자",
+];
 
 /**
  * 내 할 일 — 본인 담당이면서 아직 끝나지 않은 것.
@@ -68,7 +83,7 @@ const OPEN_FIELDS = ["내용", "담당자", "마감일", "상태", "분류", "�
 export async function getMyTodos(member: MemberName): Promise<Result<Todo[]>> {
   try {
     const records = await selectRecords<Row>(TABLE, {
-      fields: OPEN_FIELDS,
+      fields: FIELDS,
       filterByFormula: `AND({담당자} = ${quote(member)}, {상태} != '완료')`,
       revalidate: 60,
     });
@@ -80,9 +95,56 @@ export async function getMyTodos(member: MemberName): Promise<Result<Todo[]>> {
   }
 }
 
+/** 끝나지 않은 할 일 전부. 화면에서 내 것과 팀 것으로 나눈다. */
+export async function getOpenTodos(): Promise<Result<Todo[]>> {
+  try {
+    const records = await selectRecords<Row>(TABLE, {
+      fields: FIELDS,
+      filterByFormula: "{상태} != '완료'",
+      revalidate: 60,
+    });
+
+    return ok(records.map(toTodo).sort(byDueDate));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
+/**
+ * 오늘 끝낸 일 — 담당자 구분 없이 전부.
+ *
+ * 날짜 비교를 Airtable 수식에 맡기지 않는다. 수식의 TODAY()는 UTC 기준이라
+ * 한국 시간 자정 근처에서 하루가 어긋난다. 최근 이틀치만 가져와
+ * 한국 시간 날짜로 코드에서 거른다.
+ */
+export async function getCompletedToday(): Promise<Result<Todo[]>> {
+  try {
+    const records = await selectRecords<Row>(TABLE, {
+      fields: FIELDS,
+      filterByFormula:
+        "AND({상태} = '완료', IS_AFTER({완료일시}, DATEADD(TODAY(), -2, 'days')))",
+      revalidate: 60,
+    });
+
+    const today = todayInSeoul();
+    const todos = records
+      .map(toTodo)
+      .filter((todo) => todo.completedAt !== null && seoulDate(todo.completedAt) === today)
+      .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
+
+    return ok(todos);
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
 export type NewTodo = {
   title: string;
   owner: MemberName;
+  /** 만든 사람. 포털이 채운다. */
+  author: MemberName;
   due: string | null;
   category: TodoCategory | null;
 };
@@ -93,6 +155,7 @@ export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
     const fields: Partial<Row> = {
       내용: input.title,
       담당자: input.owner,
+      작성자: input.author,
       상태: "예정",
     };
     if (input.due) fields.마감일 = input.due;

@@ -8,7 +8,7 @@ Base: `OpenGarden` / `appzLstFHtHcQlWSu` · 총 16개
 | 테이블 | ID | 용도 |
 |---|---|---|
 | 프로그램 | `tblPMe2YBiKlgHBEN` | 홈 카드 목록. 사용여부=true, 노출순서 asc |
-| 할일 | `tblczfuo7BoHcmQou` | 내 할 일 / 팀 현황. 1단계 읽기 전용 |
+| 할일 | `tblczfuo7BoHcmQou` | 오늘 화면 3구획. 읽기·쓰기 |
 
 ## 건드리지 않는 것 (기존 14개)
 
@@ -17,6 +17,11 @@ Base: `OpenGarden` / `appzLstFHtHcQlWSu` · 총 16개
 | 품목 | Master DB / 호게나르드 DM / 플러그 라인업 / 구근 라인업 / 국내 라인업 |
 | 거래·문서 | 거래처 `tblTGohUQYwkdLjpV` / 영업 일지 / 지자체 영업일지 / 제안 이력 / 견적서 발송 내역 / 발주서 / 견적요청 / 선적차수 |
 | 기타 | 재고 / 작업자 / 속 분류 |
+
+## 할일 필드 (2026-09-14 추가)
+
+`시작일` 날짜 / `작성자` 단일선택 / `생성일시` 자동 / `수정일시` 자동
+뒤의 둘은 Airtable이 채운다. 사람도 코드도 쓰지 않는다.
 
 ## 예정
 

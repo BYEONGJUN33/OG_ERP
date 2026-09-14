@@ -2,32 +2,49 @@ import { CalendarEmbed } from "@/components/calendar-embed";
 import { ProgramCards } from "@/components/program-cards";
 import { TodoAddForm } from "@/components/todo-add-form";
 import { TodoList } from "@/components/todo-list";
-import { getPrograms } from "@/lib/airtable/programs";
-import { getMyTodos } from "@/lib/airtable/todos";
 import { MEMBERS } from "@/config/users";
+import { getPrograms } from "@/lib/airtable/programs";
+import { getCompletedToday, getOpenTodos } from "@/lib/airtable/todos";
 import { auth, signOut } from "@/lib/auth";
-import { fail } from "@/lib/result";
+import { todayInSeoul } from "@/lib/date";
+import { fail, ok, type Result } from "@/lib/result";
+import type { Todo } from "@/lib/todo-types";
+
+/** 한 목록을 담당자 기준으로 둘로 가른다. 실패는 그대로 물려준다. */
+function splitByOwner(
+  result: Result<Todo[]>,
+  member: string | null,
+): { mine: Result<Todo[]>; team: Result<Todo[]> } {
+  if (!result.ok) return { mine: result, team: result };
+  return {
+    mine: ok(result.data.filter((todo) => todo.owner === member)),
+    team: ok(result.data.filter((todo) => todo.owner !== member)),
+  };
+}
 
 export default async function Home() {
   const session = await auth();
   const member = session?.user.member ?? null;
 
-  // 두 구획을 나란히 불러온다. 하나가 실패해도 다른 하나는 그대로 보인다.
-  const [programs, todos] = await Promise.all([
+  const [programs, open, done] = await Promise.all([
     getPrograms(),
+    member ? getOpenTodos() : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
     member
-      ? getMyTodos(member)
-      : Promise.resolve(fail<never[]>("로그인 정보를 읽지 못했다")),
+      ? getCompletedToday()
+      : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
   ]);
+
+  const { mine, team } = splitByOwner(open, member);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">오픈가든 포털</h1>
-          {member ? (
-            <p className="mt-1 text-sm text-neutral-600">{member}님</p>
-          ) : null}
+          <h1 className="text-2xl font-semibold">오늘</h1>
+          <p className="mt-1 text-sm text-neutral-600">
+            {todayInSeoul()}
+            {member ? ` · ${member}님` : ""}
+          </p>
         </div>
 
         <form
@@ -45,20 +62,34 @@ export default async function Home() {
         </form>
       </header>
 
-      <Section title="프로그램">
-        <ProgramCards result={programs} />
-      </Section>
-
       <Section title="내 할 일">
         {member ? (
           <div className="mb-3">
-            <TodoAddForm
-              members={Object.values(MEMBERS)}
-              defaultOwner={member}
-            />
+            <TodoAddForm members={Object.values(MEMBERS)} defaultOwner={member} />
           </div>
         ) : null}
-        <TodoList result={todos} />
+        <TodoList result={mine} emptyMessage="내가 맡은 남은 일이 없다." />
+      </Section>
+
+      <Section title="팀 할 일">
+        <TodoList
+          result={team}
+          showOwner
+          emptyMessage="다른 사람이 맡은 남은 일이 없다."
+        />
+      </Section>
+
+      <Section title="오늘 끝낸 일">
+        <TodoList
+          result={done}
+          showOwner
+          readOnly
+          emptyMessage="오늘 끝낸 일이 아직 없다."
+        />
+      </Section>
+
+      <Section title="프로그램">
+        <ProgramCards result={programs} />
       </Section>
 
       <Section title="캘린더">

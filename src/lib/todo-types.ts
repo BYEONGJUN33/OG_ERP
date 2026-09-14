@@ -22,7 +22,12 @@ export type Todo = {
   owner: string;
   /** YYYY-MM-DD. 기한 없는 할 일은 null */
   due: string | null;
+  /** YYYY-MM-DD. 비우면 마감일 하루짜리 일 */
+  start: string | null;
   status: TodoStatus;
   category: string;
   memo: string;
+  /** ISO. 완료가 아니면 null */
+  completedAt: string | null;
+  author: string;
 };

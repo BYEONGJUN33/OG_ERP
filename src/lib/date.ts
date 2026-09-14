@@ -10,6 +10,11 @@ export function todayInSeoul(now: Date = new Date()): string {
   }).format(now);
 }
 
+/** ISO 시각을 한국 기준 날짜(YYYY-MM-DD)로 */
+export function seoulDate(iso: string): string {
+  return todayInSeoul(new Date(iso));
+}
+
 /** 오늘 기준 남은 일수. 음수면 지난 것. */
 export function daysUntil(date: string, today: string = todayInSeoul()): number {
   const ms = Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`);

@@ -7,9 +7,14 @@ import type { Result } from "@/lib/result";
 export function TodoList({
   result,
   emptyMessage = "남은 할 일이 없다.",
+  showOwner = false,
+  readOnly = false,
 }: {
   result: Result<Todo[]>;
   emptyMessage?: string;
+  /** 남의 일이 섞인 목록에서는 담당자를 보여준다 */
+  showOwner?: boolean;
+  readOnly?: boolean;
 }) {
   if (!result.ok) return <ErrorState message={result.message} />;
   if (result.data.length === 0) {
@@ -25,7 +30,16 @@ export function TodoList({
 
         return (
           <li key={todo.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3">
-            <TodoStatusSelect id={todo.id} status={todo.status} />
+            {readOnly ? (
+              <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
+                {todo.status}
+              </span>
+            ) : (
+              <TodoStatusSelect id={todo.id} status={todo.status} />
+            )}
+            {showOwner ? (
+              <span className="text-xs text-neutral-500">{todo.owner}</span>
+            ) : null}
             <span className="min-w-0 flex-1 text-sm">{todo.title}</span>
             <span
               className={`text-xs ${overdue ? "font-medium text-red-700" : "text-neutral-500"}`}
