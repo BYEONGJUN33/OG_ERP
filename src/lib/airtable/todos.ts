@@ -3,6 +3,7 @@ import "server-only";
 import {
   AirtableError,
   createRecord,
+  type FieldValues,
   getRecord,
   selectRecords,
   updateRecord,
@@ -153,7 +154,7 @@ export type NewTodo = {
 /** 할 일 추가. 새로 만든 것은 항상 '예정'으로 시작한다. */
 export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
   try {
-    const fields: Partial<Row> = {
+    const fields: FieldValues<Row> = {
       내용: input.title,
       담당자: input.owner,
       작성자: input.author,
@@ -180,8 +181,11 @@ export async function setTodoStatus(
   status: TodoStatus,
 ): Promise<Result<Todo>> {
   try {
-    const fields: Partial<Row> = { 상태: status };
-    fields.완료일시 = status === "완료" ? new Date().toISOString() : "";
+    // 완료를 풀면 완료일시를 지운다. 비우는 값은 null이어야 한다.
+    const fields: FieldValues<Row> = {
+      상태: status,
+      완료일시: status === "완료" ? new Date().toISOString() : null,
+    };
 
     const record = await updateRecord<Row>(TABLE, id, fields);
     return ok(toTodo(record));
@@ -220,7 +224,8 @@ export type TodoPatch = {
 
 /**
  * 상세 화면의 저장.
- * 빈 값은 빈 문자열로 보낸다 — 이래야 Airtable에서 칸이 실제로 비워진다.
+ * 빈 값은 null로 보낸다 — 이래야 칸이 실제로 비워진다.
+ * 빈 문자열을 보내면 날짜·단일선택에서 422가 난다.
  * 상태와 완료일시는 여기서 건드리지 않는다. setTodoStatus가 짝으로 관리한다.
  */
 export async function updateTodo(
@@ -231,9 +236,9 @@ export async function updateTodo(
     const record = await updateRecord<Row>(TABLE, id, {
       내용: patch.title,
       담당자: patch.owner,
-      시작일: patch.start ?? "",
-      마감일: patch.due ?? "",
-      분류: patch.category ?? "",
+      시작일: patch.start,
+      마감일: patch.due,
+      분류: patch.category,
       메모: patch.memo,
     });
     return ok(toTodo(record));

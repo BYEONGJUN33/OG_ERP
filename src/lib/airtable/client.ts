@@ -12,6 +12,12 @@ const API = "https://api.airtable.com/v0";
 
 export type AirtableRecord<F> = { id: string; fields: Partial<F> };
 
+/**
+ * 쓸 값. 칸을 비우려면 `null`을 보낸다.
+ * 빈 문자열은 날짜·단일선택에서 422로 거절당한다 — "비움"이 아니라 "잘못된 값"이다.
+ */
+export type FieldValues<F> = { [K in keyof F]?: F[K] | null };
+
 type Query = {
   /** 가져올 필드 이름. 비우지 마라 — 전체 레코드를 끌면 한도가 빨리 닳는다. */
   fields: string[];
@@ -40,6 +46,12 @@ function describe(status: number, statusText: string, tableId: string): string {
       "Airtable이 접근을 거부했다(403). 토큰의 Scopes에 data.records:read와 " +
       "(쓰기라면) data.records:write가 있는지, 그리고 OpenGarden 베이스가 " +
       "토큰의 Access 목록에 들어 있는지 확인해라."
+    );
+  }
+  if (status === 422) {
+    return (
+      "Airtable이 값을 거절했다(422). 칸을 비울 때는 빈 문자열이 아니라 " +
+      "null을 보내야 하고, 단일선택은 선택지에 있는 값이어야 한다."
     );
   }
   if (status === 429) {
@@ -187,7 +199,7 @@ export async function getRecord<F>(
 
 export async function createRecord<F>(
   tableId: string,
-  fields: Partial<F>,
+  fields: FieldValues<F>,
 ): Promise<AirtableRecord<F>> {
   const [record] = await mutate<F>(tableId, "POST", {
     records: [{ fields }],
@@ -198,7 +210,7 @@ export async function createRecord<F>(
 export async function updateRecord<F>(
   tableId: string,
   id: string,
-  fields: Partial<F>,
+  fields: FieldValues<F>,
 ): Promise<AirtableRecord<F>> {
   const [record] = await mutate<F>(tableId, "PATCH", {
     records: [{ id, fields }],
