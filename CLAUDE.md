@@ -202,11 +202,12 @@ type PortalEvent = {
 ## 10. 1단계 체크리스트
 
 - [x] Next.js + TS + Tailwind 초기화, `.gitignore`, `.env.example`
-- [~] Auth.js v5 + Google + 도메인 제한 (코드 완료, 실제 로그인 미검증)
+- [x] Auth.js v5 + Google + 도메인 제한 (2026-09-14 실제 로그인 확인)
 - [x] Airtable 읽기 함수 (`프로그램`, `할일`) — 서버 전용
 - [x] 대시보드: 프로그램 카드 / 내 할 일 / 캘린더 임베드
 - [x] 기존 HTML 도구를 `public/tools/`에 배치 (키 검사 후)
-- [~] Vercel 프로젝트 (배포함) + `app.open-garden.co.kr` (도메인 연결 확인 필요)
+- [x] Vercel 프로젝트 배포 · 대시보드 동작 확인
+- [ ] `app.open-garden.co.kr` 도메인 연결
 
 하지 않는 것: 견적서 생성기 React 이식, 품목 통합, 할 일 쓰기,
 자체 캘린더 뷰, 기존 14개 테이블 접근.
