@@ -23,7 +23,7 @@ export function CalendarLinks() {
         href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(primary)}`}
         target="_blank"
         rel="noreferrer"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
+        className="btn py-1.5"
       >
         구글 캘린더에서 열기
       </a>
@@ -31,7 +31,7 @@ export function CalendarLinks() {
         href={create.toString()}
         target="_blank"
         rel="noreferrer"
-        className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
+        className="btn-primary py-1.5"
       >
         일정 추가
       </a>

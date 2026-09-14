@@ -19,16 +19,16 @@ export function ProgramCards({ result }: { result: Result<Program[]> }) {
             href={program.href}
             target={program.newTab ? "_blank" : undefined}
             rel={program.newTab ? "noreferrer" : undefined}
-            className="flex h-full flex-col rounded-lg border border-neutral-200 p-4 transition hover:border-neutral-400 hover:bg-neutral-50"
+            className="card flex h-full flex-col p-4 transition hover:border-brand-600"
           >
             <div className="flex items-center gap-2">
               <ProgramIcon name={program.icon} />
               <span className="font-medium">{program.name}</span>
             </div>
             {program.description ? (
-              <p className="mt-2 text-sm text-neutral-600">{program.description}</p>
+              <p className="mt-2 text-sm text-muted">{program.description}</p>
             ) : null}
-            <span className="mt-3 text-xs text-neutral-400">{program.category}</span>
+            <span className="mt-3 text-xs text-faint">{program.category}</span>
           </a>
         </li>
       ))}

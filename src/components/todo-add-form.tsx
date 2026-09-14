@@ -5,9 +5,6 @@ import { useActionState, useRef } from "react";
 import { addTodoAction, type ActionState } from "@/app/todo-actions";
 import { TODO_CATEGORIES } from "@/lib/todo-types";
 
-const FIELD =
-  "rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none";
-
 export function TodoAddForm({
   members,
   defaultOwner,
@@ -29,24 +26,24 @@ export function TodoAddForm({
     <form
       ref={form}
       action={action}
-      className="rounded-lg border border-neutral-200 p-3"
+      className="card p-3"
     >
       <div className="flex flex-wrap gap-2">
         <input
           name="title"
           placeholder="할 일을 적어라"
-          className={`${FIELD} min-w-0 flex-1`}
+          className="field min-w-0 flex-1"
           required
         />
-        <select name="owner" defaultValue={defaultOwner} className={FIELD}>
+        <select name="owner" defaultValue={defaultOwner} className="field">
           {members.map((name) => (
             <option key={name} value={name}>
               {name}
             </option>
           ))}
         </select>
-        <input name="due" type="date" className={FIELD} />
-        <select name="category" defaultValue="" className={FIELD}>
+        <input name="due" type="date" className="field" />
+        <select name="category" defaultValue="" className="field">
           <option value="">분류 없음</option>
           {TODO_CATEGORIES.map((category) => (
             <option key={category} value={category}>
@@ -57,7 +54,7 @@ export function TodoAddForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {pending ? "추가 중" : "추가"}
         </button>

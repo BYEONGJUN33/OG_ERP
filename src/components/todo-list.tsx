@@ -26,7 +26,7 @@ export function TodoList({
   const today = todayInSeoul();
 
   return (
-    <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
+    <ul className="card divide-y divide-line">
       {result.data.map((todo) => {
         const overdue = todo.due !== null && daysUntil(todo.due, today) < 0;
 
@@ -40,7 +40,7 @@ export function TodoList({
               <TodoStatusSelect id={todo.id} status={todo.status} />
             )}
             {showOwner ? (
-              <span className="text-xs text-neutral-500">{todo.owner}</span>
+              <span className="text-xs text-muted">{todo.owner}</span>
             ) : null}
             <Link
               href={`/todos/${todo.id}`}
@@ -49,7 +49,7 @@ export function TodoList({
               {todo.title}
             </Link>
             <span
-              className={`text-xs ${overdue ? "font-medium text-red-700" : "text-neutral-500"}`}
+              className={`text-xs ${overdue ? "font-medium text-red-700" : "text-muted"}`}
             >
               {dueLabel(todo.due, today)}
             </span>

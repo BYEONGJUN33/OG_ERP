@@ -7,8 +7,7 @@ import { TodoStatusSelect } from "@/components/todo-status";
 import { TODO_CATEGORIES } from "@/lib/todo-types";
 import type { Todo } from "@/lib/todo-types";
 
-const FIELD =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none";
+const FIELD = "field w-full";
 
 export function TodoDetailForm({
   todo,
@@ -46,7 +45,7 @@ export function TodoDetailForm({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+            className="btn-primary"
           >
             {pending ? "저장 중" : "저장"}
           </button>
@@ -57,7 +56,7 @@ export function TodoDetailForm({
       </div>
 
       {/* 오른쪽: 속성 */}
-      <aside className="space-y-4 rounded-lg border border-neutral-200 p-4">
+      <aside className="card space-y-4 p-4">
         <div>
           <Label>상태</Label>
           {/* 상태만 즉시 저장된다 — 완료일시를 같이 찍어야 하기 때문이다 */}
@@ -107,7 +106,7 @@ export function TodoDetailForm({
           </select>
         </div>
 
-        <dl className="border-t border-neutral-200 pt-4 text-xs text-neutral-500">
+        <dl className="border-t border-line pt-4 text-xs text-muted">
           <Meta label="만든 사람" value={todo.author || "-"} />
           <Meta
             label="완료"
@@ -121,7 +120,7 @@ export function TodoDetailForm({
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1 block text-xs font-medium text-neutral-500">
+    <span className="mb-1 block text-xs font-medium text-muted">
       {children}
     </span>
   );
@@ -131,7 +130,7 @@ function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2 py-0.5">
       <dt>{label}</dt>
-      <dd className="text-neutral-700">{value}</dd>
+      <dd className="text-ink">{value}</dd>
     </div>
   );
 }

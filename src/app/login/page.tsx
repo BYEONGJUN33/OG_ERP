@@ -8,7 +8,7 @@ export default async function LoginPage({
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
       <h1 className="text-xl font-semibold">오픈가든 포털</h1>
-      <p className="mt-2 text-sm text-neutral-600">
+      <p className="mt-2 text-sm text-muted">
         회사 구글 계정으로 로그인한다.
       </p>
 
@@ -28,7 +28,7 @@ export default async function LoginPage({
       >
         <button
           type="submit"
-          className="w-full rounded-md bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700"
+          className="btn-primary w-full py-3"
         >
           구글 계정으로 로그인
         </button>

@@ -13,5 +13,5 @@ export function ProgramIcon({ name }: { name: string }) {
     ? (name as IconName)
     : FALLBACK;
 
-  return <DynamicIcon name={icon} size={20} className="text-neutral-700" />;
+  return <DynamicIcon name={icon} size={20} className="text-brand-700" />;
 }

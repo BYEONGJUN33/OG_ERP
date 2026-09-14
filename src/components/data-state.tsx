@@ -21,7 +21,7 @@ export function ErrorState({ message }: { message: string }) {
         type="button"
         disabled={pending}
         onClick={() => startTransition(() => router.refresh())}
-        className="mt-3 rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm text-red-800 hover:bg-red-100 disabled:opacity-50"
+        className="mt-3 rounded-md border border-red-300 bg-surface px-3 py-1.5 text-sm text-red-800 hover:bg-red-100 disabled:opacity-50"
       >
         {pending ? "다시 불러오는 중" : "다시 시도"}
       </button>
@@ -31,7 +31,7 @@ export function ErrorState({ message }: { message: string }) {
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">
+    <div className="rounded-lg border border-dashed border-line p-6 text-center text-sm text-muted">
       {message}
     </div>
   );

@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AppShell } from "@/components/app-shell";
 import { MonthCalendar } from "@/components/month-calendar";
 import { getEvents } from "@/lib/calendar/events";
 import { gridRange, monthGrid, parseMonth } from "@/lib/calendar/month";
@@ -16,17 +15,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   const events = await getEvents(from, to);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-900">
-            ← 오늘
-          </Link>
-          <h1 className="mt-2 text-xl font-semibold">일정</h1>
-        </div>
-        <CalendarLinks />
-      </div>
-
+    <AppShell title="일정" action={<CalendarLinks />}>
       <MonthCalendar
         year={year}
         month={month}
@@ -34,6 +23,6 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
         today={today}
         result={events}
       />
-    </main>
+    </AppShell>
   );
 }

@@ -30,20 +30,20 @@ export function EventList({
   if (result.data.length === 0) return <EmptyState message={emptyMessage} />;
 
   return (
-    <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
+    <ul className="card divide-y divide-line">
       {result.data.map((event) => (
         <li key={event.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3">
-          <span className="w-12 shrink-0 text-xs text-neutral-500">
+          <span className="w-12 shrink-0 text-xs text-muted">
             {eventTime(event)}
           </span>
           <span className="min-w-0 flex-1 text-sm">
             <EventLink event={event} className="hover:underline" />
           </span>
           {event.location ? (
-            <span className="text-xs text-neutral-500">{event.location}</span>
+            <span className="text-xs text-muted">{event.location}</span>
           ) : null}
           {event.owner ? (
-            <span className="text-xs text-neutral-500">{event.owner}</span>
+            <span className="text-xs text-muted">{event.owner}</span>
           ) : null}
           <span
             className={`rounded px-2 py-0.5 text-xs ${

@@ -1,11 +1,62 @@
 @import "tailwindcss";
 
-/* 한글 우선 시스템 폰트. 웹폰트를 받지 않는다. */
-@theme inline {
-  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic",
-    system-ui, -apple-system, sans-serif;
+/*
+ * 디자인 토큰. 규칙은 docs/design.md 에 있다.
+ * 색·간격을 화면마다 정하지 않는다. 바꿀 일이 생기면 여기만 고친다.
+ */
+@theme {
+  /* 한글 우선 시스템 폰트. 웹폰트를 받지 않는다. */
+  --font-sans:
+    "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui,
+    -apple-system, sans-serif;
+
+  /* brand — 식물 유통 회사라 초록. 버튼과 표시에만 쓴다. */
+  --color-brand-50: oklch(0.96 0.03 155);
+  --color-brand-100: oklch(0.92 0.06 155);
+  --color-brand-600: oklch(0.55 0.12 155);
+  --color-brand-700: oklch(0.47 0.11 155);
+
+  --color-ink: oklch(0.25 0.01 260);
+  --color-muted: oklch(0.52 0.01 260);
+  --color-faint: oklch(0.68 0.01 260);
+  --color-line: oklch(0.92 0.004 260);
+  --color-surface: oklch(1 0 0);
+  --color-canvas: oklch(0.985 0.002 260);
 }
 
 body {
   font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/*
+ * 공통 클래스. 화면에서 긴 유틸리티 나열을 반복하지 않는다.
+ * 새 화면은 이걸로 먼저 시도하고, 모자랄 때만 유틸리티를 더한다.
+ */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md border border-line
+      bg-surface px-3 py-2 text-sm text-ink transition-colors
+      hover:bg-canvas disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md border
+      border-transparent bg-brand-600 px-4 py-2 text-sm font-medium text-white
+      transition-colors hover:bg-brand-700 disabled:opacity-50;
+  }
+
+  .field {
+    @apply rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink
+      outline-none focus:border-brand-600;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-surface;
+  }
+
+  .section-title {
+    @apply text-[13px] font-medium text-muted;
+  }
 }

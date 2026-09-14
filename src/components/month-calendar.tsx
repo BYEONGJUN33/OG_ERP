@@ -44,21 +44,21 @@ export function MonthCalendar({
         <Link
           href={`/calendar?m=${shiftMonth(year, month, -1)}`}
           aria-label="이전 달"
-          className="rounded-md border border-neutral-300 px-2 py-1 text-sm hover:bg-neutral-50"
+          className="btn px-2 py-1"
         >
           ‹
         </Link>
         <Link
           href={`/calendar?m=${shiftMonth(year, month, 1)}`}
           aria-label="다음 달"
-          className="rounded-md border border-neutral-300 px-2 py-1 text-sm hover:bg-neutral-50"
+          className="btn px-2 py-1"
         >
           ›
         </Link>
         <span className="ml-1 font-medium">{label}</span>
         <Link
           href="/calendar"
-          className="ml-auto rounded-md border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-50"
+          className="btn ml-auto py-1"
         >
           오늘
         </Link>
@@ -71,7 +71,7 @@ export function MonthCalendar({
               {WEEKDAYS.map((day) => (
                 <th
                   key={day}
-                  className="border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-500"
+                  className="border border-line bg-canvas px-2 py-1 text-xs font-medium text-muted"
                 >
                   {day}
                 </th>
@@ -89,18 +89,18 @@ export function MonthCalendar({
                   return (
                     <td
                       key={day}
-                      className={`h-24 border border-neutral-200 align-top ${
-                        inMonth ? "" : "bg-neutral-50"
+                      className={`h-24 border border-line align-top ${
+                        inMonth ? "bg-surface" : "bg-canvas"
                       }`}
                     >
                       <div className="px-1.5 py-1">
                         <span
                           className={`inline-block rounded px-1 text-xs ${
                             isToday
-                              ? "bg-neutral-900 font-medium text-white"
+                              ? "bg-brand-600 font-medium text-white"
                               : inMonth
-                                ? "text-neutral-700"
-                                : "text-neutral-400"
+                                ? "text-ink"
+                                : "text-faint"
                           }`}
                         >
                           {Number(day.slice(8, 10))}
@@ -109,14 +109,14 @@ export function MonthCalendar({
                         <ul className="mt-1 space-y-0.5">
                           {events.slice(0, 3).map((event) => (
                             <li key={event.id} className="truncate text-xs">
-                              <span className="text-neutral-400">
+                              <span className="text-faint">
                                 {event.allDay ? "" : `${eventTime(event)} `}
                               </span>
                               <EventLink event={event} className="hover:underline" />
                             </li>
                           ))}
                           {events.length > 3 ? (
-                            <li className="text-xs text-neutral-400">
+                            <li className="text-xs text-faint">
                               +{events.length - 3}
                             </li>
                           ) : null}
