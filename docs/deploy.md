@@ -6,6 +6,9 @@
 
 - 프로젝트 `OG-ERP`, 조직 `open-garden.co.kr`
 - 동의 화면: **내부(Internal)** — 검수 불필요, 회사 계정만 로그인 가능
+- 클라이언트 유형은 반드시 **웹 애플리케이션**.
+  데스크톱 앱으로 만들면 리디렉션 URI 칸이 아예 없고 유형은 나중에 못 바꾼다.
+  잘못 만들었으면 지우고 다시 만드는 수밖에 없다.
 - 승인된 리디렉션 URI 2개
   - `http://localhost:3000/api/auth/callback/google`
   - `https://app.open-garden.co.kr/api/auth/callback/google`
@@ -41,7 +44,9 @@ airtable.com/create/tokens 에서 개인 액세스 토큰(PAT) 생성.
 1. vercel.com → Add New → Project → GitHub `BYEONGJUN33/OG_ERP` 가져오기
 2. Framework는 Next.js로 자동 인식된다. Root Directory·빌드 명령은 건드리지 않는다.
 3. Environment Variables에 위 표의 값을 넣는다. **단 `AUTH_URL`은 넣지 않는다.**
-   (Vercel에서는 요청 헤더로 자동 판단한다. 넣으면 오히려 틀어진다)
+   Vercel은 요청 헤더로 자기 주소를 판단한다(`trustHost: true`).
+   여기에 `http://localhost:3000`이 들어가면 구글 로그인 후 사용자의 PC 주소로
+   되돌려보내서 로그인이 통째로 깨진다. `AUTH_URL`은 로컬 `.env.local` 전용이다.
 4. Deploy
 5. Settings → Domains → `app.open-garden.co.kr` 추가
 6. Vercel이 알려주는 CNAME 레코드를 DNS에 등록한다

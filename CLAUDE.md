@@ -206,7 +206,7 @@ type PortalEvent = {
 - [x] Airtable 읽기 함수 (`프로그램`, `할일`) — 서버 전용
 - [x] 대시보드: 프로그램 카드 / 내 할 일 / 캘린더 임베드
 - [x] 기존 HTML 도구를 `public/tools/`에 배치 (키 검사 후)
-- [ ] Vercel 프로젝트 + `app.open-garden.co.kr`
+- [~] Vercel 프로젝트 (배포함) + `app.open-garden.co.kr` (도메인 연결 확인 필요)
 
 하지 않는 것: 견적서 생성기 React 이식, 품목 통합, 할 일 쓰기,
 자체 캘린더 뷰, 기존 14개 테이블 접근.
@@ -241,6 +241,9 @@ HANDOFF.md보다 이 파일이 최신이다.
 - 웹폰트(Geist)를 쓰지 않는다. 한글 우선 시스템 폰트 스택으로 대체.
 - 조회 실패를 예외 대신 `Result<T>`로 돌린다(`src/lib/result.ts`).
   한 구획이 실패해도 나머지 구획은 그대로 보이게 하려는 것이다.
+- 배포 설정 3건을 `docs/deploy.md`에 기록: OAuth 클라이언트는 웹 애플리케이션
+  유형이어야 하고, Vercel에 `AUTH_URL`을 넣으면 안 되며, 캘린더는 개인이 아닌
+  공용 캘린더를 쓴다.
 - 기존 HTML 도구 2개 배치. 키 검사 통과(하드코딩된 토큰 없음).
   두 도구는 사용자가 직접 입력한 Airtable PAT를 브라우저 localStorage에
   보관하고 프론트에서 Airtable을 직접 부른다. 원칙 1과 어긋나지만
