@@ -1,8 +1,21 @@
 import "server-only";
 
-import { AirtableError, selectRecords } from "@/lib/airtable/client";
+import {
+  AirtableError,
+  createRecord,
+  selectRecords,
+  updateRecord,
+} from "@/lib/airtable/client";
 import type { MemberName } from "@/config/users";
+import { todayInSeoul } from "@/lib/date";
 import { fail, ok, type Result } from "@/lib/result";
+import {
+  type Todo,
+  type TodoCategory,
+  type TodoStatus,
+} from "@/lib/todo-types";
+
+export type { Todo, TodoCategory, TodoStatus };
 
 const TABLE = "tblczfuo7BoHcmQou";
 
@@ -17,18 +30,6 @@ type Row = {
   메모: string;
 };
 
-export type TodoStatus = "예정" | "진행중" | "완료" | "보류";
-
-export type Todo = {
-  id: string;
-  title: string;
-  owner: string;
-  /** YYYY-MM-DD. 기한 없는 할 일은 null */
-  due: string | null;
-  status: TodoStatus;
-  category: string;
-  memo: string;
-};
 
 /** Airtable 수식에 넣을 문자열을 감싼다. 작은따옴표를 이스케이프한다. */
 function quote(value: string): string {
@@ -77,4 +78,58 @@ export async function getMyTodos(member: MemberName): Promise<Result<Todo[]>> {
     if (error instanceof AirtableError) return fail(error.message);
     throw error;
   }
+}
+
+export type NewTodo = {
+  title: string;
+  owner: MemberName;
+  due: string | null;
+  category: TodoCategory | null;
+};
+
+/** 할 일 추가. 새로 만든 것은 항상 '예정'으로 시작한다. */
+export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
+  try {
+    const fields: Partial<Row> = {
+      내용: input.title,
+      담당자: input.owner,
+      상태: "예정",
+    };
+    if (input.due) fields.마감일 = input.due;
+    if (input.category) fields.분류 = input.category;
+
+    const record = await createRecord<Row>(TABLE, fields);
+    return ok(toTodo(record));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
+/**
+ * 상태 변경.
+ * 완료로 바꿀 때 완료일시를 함께 찍는다 — 이 칸이 비면 업무일지가 성립하지 않는다.
+ * 완료를 풀면 완료일시도 지운다. 끝나지 않은 일에 끝난 시각이 남아 있으면 안 된다.
+ */
+export async function setTodoStatus(
+  id: string,
+  status: TodoStatus,
+): Promise<Result<Todo>> {
+  try {
+    const fields: Partial<Row> = { 상태: status };
+    fields.완료일시 = status === "완료" ? new Date().toISOString() : "";
+
+    const record = await updateRecord<Row>(TABLE, id, fields);
+    return ok(toTodo(record));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
+/** 오늘 마감이거나 이미 지난 것, 그리고 진행중인 것. '오늘' 화면용. */
+export function isDueTodayOrOverdue(todo: Todo, today = todayInSeoul()): boolean {
+  if (todo.status === "완료") return false;
+  if (todo.status === "진행중") return true;
+  return todo.due !== null && todo.due <= today;
 }

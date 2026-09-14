@@ -1,8 +1,10 @@
 import { CalendarEmbed } from "@/components/calendar-embed";
 import { ProgramCards } from "@/components/program-cards";
+import { TodoAddForm } from "@/components/todo-add-form";
 import { TodoList } from "@/components/todo-list";
 import { getPrograms } from "@/lib/airtable/programs";
 import { getMyTodos } from "@/lib/airtable/todos";
+import { MEMBERS } from "@/config/users";
 import { auth, signOut } from "@/lib/auth";
 import { fail } from "@/lib/result";
 
@@ -48,6 +50,14 @@ export default async function Home() {
       </Section>
 
       <Section title="내 할 일">
+        {member ? (
+          <div className="mb-3">
+            <TodoAddForm
+              members={Object.values(MEMBERS)}
+              defaultOwner={member}
+            />
+          </div>
+        ) : null}
         <TodoList result={todos} />
       </Section>
 

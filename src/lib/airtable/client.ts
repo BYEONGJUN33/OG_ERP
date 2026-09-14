@@ -1,6 +1,6 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
+import { unstable_cache, updateTag } from "next/cache";
 
 /**
  * Airtable REST 호출은 전부 이 파일을 통과한다.
@@ -37,8 +37,9 @@ function describe(status: number, statusText: string, tableId: string): string {
   }
   if (status === 403) {
     return (
-      "Airtable이 접근을 거부했다(403). 토큰에 data.records:read 스코프가 있는지, " +
-      "그리고 OpenGarden 베이스가 토큰의 Access 목록에 들어 있는지 확인해라."
+      "Airtable이 접근을 거부했다(403). 토큰의 Scopes에 data.records:read와 " +
+      "(쓰기라면) data.records:write가 있는지, 그리고 OpenGarden 베이스가 " +
+      "토큰의 Access 목록에 들어 있는지 확인해라."
     );
   }
   if (status === 429) {
@@ -97,6 +98,10 @@ async function fetchAll<F>(
   return records;
 }
 
+export function tagOf(tableId: string): string {
+  return `airtable:${tableId}`;
+}
+
 /**
  * 한 테이블을 읽는다. 성공한 결과만 캐시된다.
  * 실패하면 예외가 나가고 아무것도 저장되지 않으므로, 권한을 고치면 바로 반영된다.
@@ -109,6 +114,63 @@ export async function selectRecords<F>(
 
   return unstable_cache(() => fetchAll<F>(tableId, query), key, {
     revalidate: query.revalidate,
-    tags: [`airtable:${tableId}`],
+    tags: [tagOf(tableId)],
   })();
+}
+
+/**
+ * 레코드를 만들거나 고친다.
+ * 쓰기 뒤에는 그 테이블의 캐시를 버린다 — 방금 한 일이 화면에 안 보이면
+ * 사용자는 실패한 줄 알고 한 번 더 누른다.
+ * 서버 액션에서만 부른다.
+ */
+async function mutate<F>(
+  tableId: string,
+  method: "POST" | "PATCH",
+  body: unknown,
+): Promise<AirtableRecord<F>[]> {
+  const token = env("AIRTABLE_TOKEN");
+  const baseId = env("AIRTABLE_BASE_ID");
+
+  const response = await fetch(`${API}/${baseId}/${tableId}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new AirtableError(
+      describe(response.status, response.statusText, tableId),
+    );
+  }
+
+  const json = (await response.json()) as { records: AirtableRecord<F>[] };
+  // updateTag는 서버 액션 안에서 즉시 만료시킨다(읽기-자기쓰기 보장).
+  updateTag(tagOf(tableId));
+  return json.records;
+}
+
+export async function createRecord<F>(
+  tableId: string,
+  fields: Partial<F>,
+): Promise<AirtableRecord<F>> {
+  const [record] = await mutate<F>(tableId, "POST", {
+    records: [{ fields }],
+  });
+  return record;
+}
+
+export async function updateRecord<F>(
+  tableId: string,
+  id: string,
+  fields: Partial<F>,
+): Promise<AirtableRecord<F>> {
+  const [record] = await mutate<F>(tableId, "PATCH", {
+    records: [{ id, fields }],
+  });
+  return record;
 }
