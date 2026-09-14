@@ -20,34 +20,44 @@ export async function AppShell({
   const session = await auth();
 
   return (
-    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-6 px-4 py-6 sm:flex-row sm:gap-8">
-      <aside className="sm:w-44 sm:shrink-0">
-        <div className="mb-4 hidden sm:block">
-          <span className="text-sm font-semibold">오픈가든</span>
+    <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5 px-4 py-5 sm:flex-row sm:gap-6">
+      <aside className="sm:w-[200px] sm:shrink-0 sm:border-r sm:border-line sm:pr-4">
+        <div className="mb-4 flex items-center gap-2">
+          <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-[3px] bg-brand-600 text-xs font-bold text-white">
+            O
+          </span>
+          <span className="text-sm font-bold">오픈가든</span>
         </div>
 
         <Nav />
 
-        <div className="mt-4 hidden border-t border-line pt-4 sm:block">
-          <p className="mb-2 text-xs text-muted">{session?.user.member}님</p>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/login" });
-            }}
-          >
-            <button type="submit" className="text-xs text-muted hover:text-ink">
-              로그아웃
-            </button>
-          </form>
+        <div className="mt-4 flex items-center gap-2 border-t border-line pt-3.5">
+          <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white">
+            {session?.user.member?.slice(0, 1) ?? "?"}
+          </span>
+          <div>
+            <p className="text-xs font-semibold">{session?.user.member}</p>
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/login" });
+              }}
+            >
+              <button type="submit" className="text-[11px] text-muted hover:text-ink">
+                로그아웃
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 
       <main className="min-w-0 flex-1">
-        <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <header className="mb-[18px] flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold">{title}</h1>
-            {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
+            {subtitle ? (
+              <p className="mt-[3px] text-[13px] text-muted">{subtitle}</p>
+            ) : null}
           </div>
           {action}
         </header>
@@ -68,8 +78,8 @@ export function Section({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="mt-8 first:mt-0">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
+    <section className="mt-[26px] first:mt-0">
+      <div className="mb-2.5 flex items-baseline justify-between gap-3">
         <h2 className="section-title">{title}</h2>
         {action}
       </div>

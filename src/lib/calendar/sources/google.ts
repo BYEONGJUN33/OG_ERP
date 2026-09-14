@@ -13,10 +13,58 @@ const API = "https://www.googleapis.com/calendar/v3/calendars";
 
 export class CalendarError extends Error {}
 
+/** 캘린더별 기본색 + 일정별 지정색. 구글에서 정한 색을 그대로 쓰려고 읽는다. */
+type Palette = {
+  /** colorId -> hex. 사용자가 일정 하나에 따로 지정한 색 */
+  event: Record<string, string>;
+  /** calendarId -> hex. 캘린더 자체의 색 */
+  calendar: Record<string, string>;
+};
+
+async function fetchJson<T>(url: string, accessToken: string): Promise<T | null> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    // 색은 거의 안 바뀌지만 사용자가 바꾸면 바로 반영돼야 한다.
+    next: { revalidate: 300 },
+  });
+  if (!response.ok) return null;
+  return (await response.json()) as T;
+}
+
+/**
+ * 색표를 읽는다. 실패해도 일정은 보여야 하므로 빈 표를 돌려준다 —
+ * 색이 없으면 회색으로 그릴 뿐 화면이 죽지는 않는다.
+ */
+async function getPalette(accessToken: string): Promise<Palette> {
+  const [colors, list] = await Promise.all([
+    fetchJson<{ event?: Record<string, { background?: string }> }>(
+      "https://www.googleapis.com/calendar/v3/colors",
+      accessToken,
+    ),
+    fetchJson<{ items?: { id: string; backgroundColor?: string }[] }>(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+      accessToken,
+    ),
+  ]);
+
+  const event: Record<string, string> = {};
+  for (const [id, value] of Object.entries(colors?.event ?? {})) {
+    if (value.background) event[id] = value.background;
+  }
+
+  const calendar: Record<string, string> = {};
+  for (const item of list?.items ?? []) {
+    if (item.backgroundColor) calendar[item.id] = item.backgroundColor;
+  }
+
+  return { event, calendar };
+}
+
 type GoogleEvent = {
   id: string;
   status?: string;
   summary?: string;
+  colorId?: string;
   location?: string;
   description?: string;
   htmlLink?: string;
@@ -26,7 +74,11 @@ type GoogleEvent = {
   end?: { date?: string; dateTime?: string };
 };
 
-function toPortalEvent(event: GoogleEvent, calendarId: string): PortalEvent | null {
+function toPortalEvent(
+  event: GoogleEvent,
+  calendarId: string,
+  palette: Palette,
+): PortalEvent | null {
   const start = event.start?.dateTime ?? event.start?.date;
   if (!start) return null; // 시작이 없는 일정은 그릴 수 없다
 
@@ -42,6 +94,10 @@ function toPortalEvent(event: GoogleEvent, calendarId: string): PortalEvent | nu
     location: event.location,
     description: event.description,
     href: event.htmlLink,
+    // 일정에 색을 따로 지정했으면 그 색, 아니면 캘린더 색.
+    color:
+      (event.colorId ? palette.event[event.colorId] : undefined) ??
+      palette.calendar[calendarId],
   };
 }
 
@@ -50,6 +106,7 @@ async function fetchOne(
   accessToken: string,
   from: Date,
   to: Date,
+  palette: Palette,
 ): Promise<PortalEvent[]> {
   const url = new URL(`${API}/${encodeURIComponent(calendarId)}/events`);
   url.searchParams.set("timeMin", from.toISOString());
@@ -85,7 +142,7 @@ async function fetchOne(
 
   return (body.items ?? [])
     .filter((event) => event.status !== "cancelled")
-    .map((event) => toPortalEvent(event, calendarId))
+    .map((event) => toPortalEvent(event, calendarId, palette))
     .filter((event): event is PortalEvent => event !== null);
 }
 
@@ -95,8 +152,9 @@ export async function getGoogleEvents(
   from: Date,
   to: Date,
 ): Promise<PortalEvent[]> {
+  const palette = await getPalette(accessToken);
   const pages = await Promise.all(
-    calendarIds.map((id) => fetchOne(id, accessToken, from, to)),
+    calendarIds.map((id) => fetchOne(id, accessToken, from, to, palette)),
   );
   return pages.flat();
 }

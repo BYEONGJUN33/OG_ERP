@@ -2,6 +2,7 @@ import "server-only";
 
 import { getTodosWithDueDate } from "@/lib/airtable/todos";
 import type { PortalEvent } from "@/lib/calendar/types";
+import { categoryHex } from "@/lib/labels";
 
 /**
  * 할 일 마감을 일정으로 바꾼다.
@@ -31,5 +32,6 @@ export async function getTodoEvents(
       owner: todo.owner,
       description: todo.memo,
       href: `/todos/${todo.id}`,
+      color: categoryHex(todo.category),
     }));
 }

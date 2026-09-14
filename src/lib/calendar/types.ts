@@ -21,6 +21,11 @@ export type PortalEvent = {
   description?: string;
   /** 원본으로 가는 링크 */
   href?: string;
+  /**
+   * 막대 색(hex). 구글 일정은 사용자가 구글에서 지정한 색을 그대로 쓴다 —
+   * 공휴일은 빨강, 박람회는 노랑처럼 규칙을 바꾸려고 코드를 고칠 이유가 없다.
+   */
+  color?: string;
 };
 
 /** 한국 기준 날짜(YYYY-MM-DD). 달력 칸에 넣을 때 쓴다. */

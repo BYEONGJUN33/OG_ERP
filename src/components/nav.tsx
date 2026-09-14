@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
-  { href: "/", label: "오늘" },
+  { href: "/", label: "대시보드" },
   { href: "/calendar", label: "일정" },
   { href: "/todos", label: "할 일" },
   { href: "/programs", label: "프로그램" },
@@ -27,10 +27,10 @@ export function Nav() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`rounded-[3px] border-l-[3px] px-3 py-[7px] text-sm transition-colors ${
               active
-                ? "bg-brand-50 font-medium text-brand-700"
-                : "text-muted hover:bg-canvas hover:text-ink"
+                ? "border-brand-600 bg-brand-50 font-semibold text-brand-600"
+                : "border-transparent text-muted hover:bg-canvas hover:text-ink"
             }`}
           >
             {item.label}

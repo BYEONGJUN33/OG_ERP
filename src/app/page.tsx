@@ -2,11 +2,13 @@ import Link from "next/link";
 
 import { AppShell, Section } from "@/components/app-shell";
 import { EventList } from "@/components/event-list";
+import { MonthCalendar } from "@/components/month-calendar";
 import { TodoAddForm } from "@/components/todo-add-form";
 import { TodoList } from "@/components/todo-list";
 import { MEMBERS } from "@/config/users";
 import { getCompletedToday, getOpenTodos } from "@/lib/airtable/todos";
 import { getEvents } from "@/lib/calendar/events";
+import { gridRange, monthGrid } from "@/lib/calendar/month";
 import { auth } from "@/lib/auth";
 import { todayInSeoul } from "@/lib/date";
 import { fail, ok, type Result } from "@/lib/result";
@@ -24,7 +26,7 @@ function splitByOwner(
   };
 }
 
-export default async function TodayPage() {
+export default async function DashboardPage() {
   const session = await auth();
   const member = session?.user.member ?? null;
 
@@ -32,12 +34,17 @@ export default async function TodayPage() {
   const dayStart = new Date(`${today}T00:00:00+09:00`);
   const dayEnd = new Date(`${today}T23:59:59+09:00`);
 
-  const [open, done, events] = await Promise.all([
+  const [year, month] = today.split("-").map(Number);
+  const weeks = monthGrid(year, month);
+  const monthSpan = gridRange(weeks);
+
+  const [open, done, events, monthEvents] = await Promise.all([
     member ? getOpenTodos() : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
     member
       ? getCompletedToday()
       : Promise.resolve(fail<Todo[]>("로그인 정보를 읽지 못했다")),
     getEvents(dayStart, dayEnd),
+    getEvents(monthSpan.from, monthSpan.to),
   ]);
 
   const { mine, team } = splitByOwner(open, member);
@@ -48,7 +55,7 @@ export default async function TodayPage() {
     : events;
 
   return (
-    <AppShell title="오늘" subtitle={today}>
+    <AppShell title="대시보드" subtitle={today}>
       <Section title="내 할 일">
         {member ? (
           <div className="mb-3">
@@ -82,15 +89,26 @@ export default async function TodayPage() {
         />
       </Section>
 
+      <Section title="오늘 일정">
+        <EventList result={schedule} emptyMessage="오늘 잡힌 일정이 없다." />
+      </Section>
+
       <Section
-        title="오늘 일정"
+        title={`${year}년 ${month}월`}
         action={
           <Link href="/calendar" className="text-xs text-muted hover:text-ink">
             달력 보기 →
           </Link>
         }
       >
-        <EventList result={schedule} emptyMessage="오늘 잡힌 일정이 없다." />
+        <MonthCalendar
+          year={year}
+          month={month}
+          weeks={weeks}
+          today={today}
+          result={monthEvents}
+          compact
+        />
       </Section>
     </AppShell>
   );

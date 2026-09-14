@@ -3,11 +3,6 @@ import { EventLink } from "@/components/event-link";
 import type { PortalEvent } from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
-const TYPE_STYLE: Record<string, string> = {
-  구글일정: "bg-sky-100 text-sky-800",
-  할일: "bg-neutral-100 text-neutral-700",
-};
-
 /** 시간 일정은 HH:mm, 종일 일정은 "종일" */
 export function eventTime(event: PortalEvent): string {
   if (event.allDay) return "종일";
@@ -36,6 +31,11 @@ export function EventList({
           <span className="w-12 shrink-0 text-xs text-muted">
             {eventTime(event)}
           </span>
+          <span
+            aria-hidden
+            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+            style={{ background: event.color ?? "#8993a4" }}
+          />
           <span className="min-w-0 flex-1 text-sm">
             <EventLink event={event} className="hover:underline" />
           </span>
@@ -45,13 +45,7 @@ export function EventList({
           {event.owner ? (
             <span className="text-xs text-muted">{event.owner}</span>
           ) : null}
-          <span
-            className={`rounded px-2 py-0.5 text-xs ${
-              TYPE_STYLE[event.type] ?? TYPE_STYLE.할일
-            }`}
-          >
-            {event.type}
-          </span>
+
         </li>
       ))}
     </ul>

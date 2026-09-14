@@ -8,6 +8,15 @@ import { eventDate, type PortalEvent } from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
 /**
+ * 일정 색을 옅은 배경 + 진한 글씨로 바꾼다.
+ * 구글에서 지정한 색을 그대로 쓰되, 글자가 읽히도록 배경만 흐리게 깐다.
+ */
+function tint(color: string | undefined): React.CSSProperties {
+  if (!color) return { background: "#eceef1", color: "#44546f" };
+  return { background: `${color}22`, color };
+}
+
+/**
  * 월간 달력. 구글이 그려주던 자리를 대신한다.
  * 라이브러리를 쓰지 않는다 — 우리가 필요한 건 격자에 점을 찍는 것뿐이고,
  * 반복 일정 전개 같은 어려운 부분은 구글이 이미 끝내서 보내준다.
@@ -18,12 +27,15 @@ export function MonthCalendar({
   weeks,
   today,
   result,
+  compact = false,
 }: {
   year: number;
   month: number;
   weeks: string[][];
   today: string;
   result: Result<PortalEvent[]>;
+  /** 대시보드에 얹을 때. 이동 버튼을 숨기고 칸을 낮춘다. */
+  compact?: boolean;
 }) {
   if (!result.ok) return <ErrorState message={result.message} />;
 
@@ -40,7 +52,7 @@ export function MonthCalendar({
 
   return (
     <div>
-      <div className="mb-3 flex items-center gap-2">
+      <div className={`mb-3 flex items-center gap-2 ${compact ? "hidden" : ""}`}>
         <Link
           href={`/calendar?m=${shiftMonth(year, month, -1)}`}
           aria-label="이전 달"
@@ -89,7 +101,7 @@ export function MonthCalendar({
                   return (
                     <td
                       key={day}
-                      className={`h-24 border border-line align-top ${
+                      className={`${compact ? "h-16" : "h-24"} border border-line align-top ${
                         inMonth ? "bg-surface" : "bg-canvas"
                       }`}
                     >
@@ -108,15 +120,19 @@ export function MonthCalendar({
 
                         <ul className="mt-1 space-y-0.5">
                           {events.slice(0, 3).map((event) => (
-                            <li key={event.id} className="truncate text-xs">
-                              <span className="text-faint">
-                                {event.allDay ? "" : `${eventTime(event)} `}
-                              </span>
+                            <li
+                              key={event.id}
+                              className="truncate rounded-[2px] px-1 py-px text-[11px]"
+                              style={tint(event.color)}
+                            >
+                              {event.allDay ? null : (
+                                <span className="opacity-70">{eventTime(event)} </span>
+                              )}
                               <EventLink event={event} className="hover:underline" />
                             </li>
                           ))}
                           {events.length > 3 ? (
-                            <li className="text-xs text-faint">
+                            <li className="px-1 text-[11px] text-faint">
                               +{events.length - 3}
                             </li>
                           ) : null}
