@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ErrorState } from "@/components/data-state";
+import { TodoComments } from "@/components/todo-comments";
 import { TodoDetailForm } from "@/components/todo-detail-form";
 import { MEMBERS } from "@/config/users";
 import { getTodo } from "@/lib/airtable/todos";
@@ -23,7 +24,10 @@ export default async function TodoDetailPage({ params }: PageProps<"/todos/[id]"
       <h1 className="mt-3 mb-6 text-xl font-semibold">할 일</h1>
 
       {result.ok ? (
-        <TodoDetailForm todo={result.data!} members={Object.values(MEMBERS)} />
+        <>
+          <TodoDetailForm todo={result.data!} members={Object.values(MEMBERS)} />
+          <TodoComments id={result.data!.id} raw={result.data!.comments} />
+        </>
       ) : (
         <ErrorState message={result.message} />
       )}

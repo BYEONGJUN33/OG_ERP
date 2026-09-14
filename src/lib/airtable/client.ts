@@ -166,35 +166,43 @@ async function mutate<F>(
   return json.records;
 }
 
+/**
+ * 캐시를 거치지 않는 단건 읽기.
+ * 읽고-고쳐-쓰는 작업에서 쓴다. 캐시된 값을 바탕으로 쓰면 남의 변경을 덮어쓴다.
+ */
+export async function getRecordFresh<F>(
+  tableId: string,
+  id: string,
+): Promise<AirtableRecord<F> | null> {
+  const token = env("AIRTABLE_TOKEN");
+  const baseId = env("AIRTABLE_BASE_ID");
+
+  const response = await fetch(`${API}/${baseId}/${tableId}/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new AirtableError(
+      describe(response.status, response.statusText, tableId),
+    );
+  }
+
+  return (await response.json()) as AirtableRecord<F>;
+}
+
 /** 레코드 하나. 없으면 null. */
 export async function getRecord<F>(
   tableId: string,
   id: string,
   revalidate: number,
 ): Promise<AirtableRecord<F> | null> {
-  const load = async (): Promise<AirtableRecord<F> | null> => {
-    const token = env("AIRTABLE_TOKEN");
-    const baseId = env("AIRTABLE_BASE_ID");
-
-    const response = await fetch(`${API}/${baseId}/${tableId}/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (response.status === 404) return null;
-    if (!response.ok) {
-      throw new AirtableError(
-        describe(response.status, response.statusText, tableId),
-      );
-    }
-
-    return (await response.json()) as AirtableRecord<F>;
-  };
-
-  return unstable_cache(load, ["airtable", tableId, id], {
-    revalidate,
-    tags: [tagOf(tableId)],
-  })();
+  return unstable_cache(
+    () => getRecordFresh<F>(tableId, id),
+    ["airtable", tableId, id],
+    { revalidate, tags: [tagOf(tableId)] },
+  )();
 }
 
 export async function createRecord<F>(

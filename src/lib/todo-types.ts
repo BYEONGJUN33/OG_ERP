@@ -30,4 +30,6 @@ export type Todo = {
   /** ISO. 완료가 아니면 null */
   completedAt: string | null;
   author: string;
+  /** 원문. 화면에서 parseComments로 쪼갠다 */
+  comments: string;
 };

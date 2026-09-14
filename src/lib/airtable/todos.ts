@@ -5,9 +5,11 @@ import {
   createRecord,
   type FieldValues,
   getRecord,
+  getRecordFresh,
   selectRecords,
   updateRecord,
 } from "@/lib/airtable/client";
+import { appendComment } from "@/lib/comments";
 import type { MemberName } from "@/config/users";
 import { seoulDate, todayInSeoul } from "@/lib/date";
 import { fail, ok, type Result } from "@/lib/result";
@@ -32,6 +34,7 @@ type Row = {
   분류: string;
   메모: string;
   작성자: string;
+  댓글: string;
 };
 
 
@@ -63,6 +66,7 @@ function toTodo(record: { id: string; fields: Partial<Row> }): Todo {
     memo: record.fields.메모 ?? "",
     completedAt: record.fields.완료일시 ?? null,
     author: record.fields.작성자 ?? "",
+    comments: record.fields.댓글 ?? "",
   };
 }
 
@@ -76,6 +80,7 @@ const FIELDS = [
   "분류",
   "메모",
   "작성자",
+  "댓글",
 ];
 
 /**
@@ -240,6 +245,33 @@ export async function updateTodo(
       마감일: patch.due,
       분류: patch.category,
       메모: patch.memo,
+    });
+    return ok(toTodo(record));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
+/**
+ * 댓글 한 줄 추가.
+ *
+ * 댓글은 한 칸에 텍스트로 쌓이므로 읽고-고쳐-쓴다. 캐시된 값을 쓰면
+ * 그 사이 상대가 단 댓글이 지워지므로, 쓰기 직전에 원본을 다시 읽는다.
+ * 두 사람이 같은 순간에 쓰면 여전히 한쪽이 밀릴 수 있다 — 2명에 한 건당
+ * 한두 개라는 전제에서 받아들인 위험이다.
+ */
+export async function addComment(
+  id: string,
+  author: MemberName,
+  body: string,
+): Promise<Result<Todo>> {
+  try {
+    const current = await getRecordFresh<Row>(TABLE, id);
+    if (!current) return fail("없는 할 일이다.");
+
+    const record = await updateRecord<Row>(TABLE, id, {
+      댓글: appendComment(current.fields.댓글 ?? "", author, body),
     });
     return ok(toTodo(record));
   } catch (error) {

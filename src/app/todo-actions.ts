@@ -1,7 +1,12 @@
 "use server";
 
 import { MEMBERS, type MemberName } from "@/config/users";
-import { createTodo, setTodoStatus, updateTodo } from "@/lib/airtable/todos";
+import {
+  addComment,
+  createTodo,
+  setTodoStatus,
+  updateTodo,
+} from "@/lib/airtable/todos";
 import {
   TODO_CATEGORIES,
   TODO_STATUSES,
@@ -98,5 +103,19 @@ export async function saveTodoAction(
     memo: String(formData.get("memo") ?? ""),
   });
 
+  return { error: result.ok ? null : result.message };
+}
+
+export async function addCommentAction(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const author = await requireMember();
+
+  const body = String(formData.get("body") ?? "").trim();
+  if (!body) return { error: "댓글을 적어라." };
+
+  const result = await addComment(id, author, body);
   return { error: result.ok ? null : result.message };
 }
