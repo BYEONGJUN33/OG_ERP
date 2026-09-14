@@ -154,6 +154,37 @@ async function mutate<F>(
   return json.records;
 }
 
+/** 레코드 하나. 없으면 null. */
+export async function getRecord<F>(
+  tableId: string,
+  id: string,
+  revalidate: number,
+): Promise<AirtableRecord<F> | null> {
+  const load = async (): Promise<AirtableRecord<F> | null> => {
+    const token = env("AIRTABLE_TOKEN");
+    const baseId = env("AIRTABLE_BASE_ID");
+
+    const response = await fetch(`${API}/${baseId}/${tableId}/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new AirtableError(
+        describe(response.status, response.statusText, tableId),
+      );
+    }
+
+    return (await response.json()) as AirtableRecord<F>;
+  };
+
+  return unstable_cache(load, ["airtable", tableId, id], {
+    revalidate,
+    tags: [tagOf(tableId)],
+  })();
+}
+
 export async function createRecord<F>(
   tableId: string,
   fields: Partial<F>,

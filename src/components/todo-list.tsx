@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { EmptyState, ErrorState } from "@/components/data-state";
 import { TodoStatusSelect } from "@/components/todo-status";
 import type { Todo } from "@/lib/todo-types";
@@ -40,7 +42,12 @@ export function TodoList({
             {showOwner ? (
               <span className="text-xs text-neutral-500">{todo.owner}</span>
             ) : null}
-            <span className="min-w-0 flex-1 text-sm">{todo.title}</span>
+            <Link
+              href={`/todos/${todo.id}`}
+              className="min-w-0 flex-1 text-sm hover:underline"
+            >
+              {todo.title}
+            </Link>
             <span
               className={`text-xs ${overdue ? "font-medium text-red-700" : "text-neutral-500"}`}
             >

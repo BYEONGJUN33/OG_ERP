@@ -3,6 +3,7 @@ import "server-only";
 import {
   AirtableError,
   createRecord,
+  getRecord,
   selectRecords,
   updateRecord,
 } from "@/lib/airtable/client";
@@ -195,4 +196,49 @@ export function isDueTodayOrOverdue(todo: Todo, today = todayInSeoul()): boolean
   if (todo.status === "완료") return false;
   if (todo.status === "진행중") return true;
   return todo.due !== null && todo.due <= today;
+}
+
+/** 할 일 하나. 없으면 null. */
+export async function getTodo(id: string): Promise<Result<Todo | null>> {
+  try {
+    const record = await getRecord<Row>(TABLE, id, 60);
+    return ok(record ? toTodo(record) : null);
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}
+
+export type TodoPatch = {
+  title: string;
+  owner: MemberName;
+  start: string | null;
+  due: string | null;
+  category: TodoCategory | null;
+  memo: string;
+};
+
+/**
+ * 상세 화면의 저장.
+ * 빈 값은 빈 문자열로 보낸다 — 이래야 Airtable에서 칸이 실제로 비워진다.
+ * 상태와 완료일시는 여기서 건드리지 않는다. setTodoStatus가 짝으로 관리한다.
+ */
+export async function updateTodo(
+  id: string,
+  patch: TodoPatch,
+): Promise<Result<Todo>> {
+  try {
+    const record = await updateRecord<Row>(TABLE, id, {
+      내용: patch.title,
+      담당자: patch.owner,
+      시작일: patch.start ?? "",
+      마감일: patch.due ?? "",
+      분류: patch.category ?? "",
+      메모: patch.memo,
+    });
+    return ok(toTodo(record));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
 }
