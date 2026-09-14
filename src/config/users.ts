@@ -10,8 +10,8 @@
  * 다르면 "내 할 일"이 빈 목록으로 나온다.
  */
 export const MEMBERS = {
-  "TODO-1@open-garden.co.kr": "이시형",
-  "TODO-2@open-garden.co.kr": "배병준",
+  "info@open-garden.co.kr": "이시형",
+  "jun@open-garden.co.kr": "배병준",
 } as const satisfies Record<string, string>;
 
 /** Airtable `할일.담당자`가 가질 수 있는 값 */
