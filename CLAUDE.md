@@ -72,6 +72,8 @@
 ## 5. 환경
 
 - Node 22 (`.nvmrc`에 `22`). 확인된 실행 버전 v22.22.2 / npm 10.9.7
+- Next.js 16 / React 19 / Tailwind v4 / ESLint 9 (2026-09-14 초기화 기준)
+- 소스는 `src/` 아래. import alias는 `@/*` (= `src/*`)
 - 최초 1회만 `npm install` (lock 파일 생성). 이후 항상 `npm ci`
 - `npm run dev` / `npm run build` / `npm run lint`
 - 세션 시작 시: `node -v` → `git remote -v` → `npm ci`
@@ -121,7 +123,7 @@ Base `appzLstFHtHcQlWSu` (OpenGarden). 1단계에서 쓰는 테이블은 2개뿐
 
 ### 규칙
 
-- Airtable 호출은 `lib/airtable/` 안에서만. 화면은 이 함수만 부른다.
+- Airtable 호출은 `src/lib/airtable/` 안에서만. 화면은 이 함수만 부른다.
 - 한글 필드명은 이 경계에서 한 번만 영문 타입으로 바꾼다.
   화면 코드에 한글 키 문자열이 나오면 안 된다(오타를 TS가 못 잡는다).
 - 새로고침마다 전체 읽기 금지. 호출 한도가 있다(5 req/s).
@@ -141,10 +143,10 @@ Base `appzLstFHtHcQlWSu` (OpenGarden). 1단계에서 쓰는 테이블은 2개뿐
 
 - Google OAuth. `hd=open-garden.co.kr`로 제한하고,
   콜백에서 이메일 도메인을 서버에서 한 번 더 검증한다(`hd`는 위조 가능).
-- 이메일 → 담당자 이름 매핑은 `config/users.ts` 한 곳에만 둔다.
+- 이메일 → 담당자 이름 매핑은 `src/config/users.ts` 한 곳에만 둔다.
   `할일.담당자`가 단일선택 텍스트라 매핑이 필요하다.
   매핑에 없는 이메일은 로그인 거부.
-- OAuth 스코프는 `lib/auth/scopes.ts` 한 곳에만 정의한다.
+- OAuth 스코프는 `src/lib/auth/scopes.ts` 한 곳에만 정의한다.
   2단계에서 calendar 읽기 스코프가 추가된다. 흩어놓지 마라.
 
 ## 8. 기존 HTML 도구
@@ -189,15 +191,15 @@ type PortalEvent = {
 }
 ```
 
-- `lib/calendar/types.ts`에 `PortalEvent`를 둔다.
-- `lib/calendar/sources/*.ts`에 출처별 `getEvents(from, to)` 하나씩.
+- `src/lib/calendar/types.ts`에 `PortalEvent`를 둔다.
+- `src/lib/calendar/sources/*.ts`에 출처별 `getEvents(from, to)` 하나씩.
 - 캘린더 화면은 출처를 모른다. 합쳐진 배열만 받는다.
 - 새 유형 추가 = 어댑터 파일 하나 + 등록 한 줄. 그 이상이면 설계가 틀린 것이다.
 - 1단계에서는 타입만 정의하고 어댑터는 만들지 않는다.
 
 ## 10. 1단계 체크리스트
 
-- [ ] Next.js + TS + Tailwind 초기화, `.gitignore`, `.env.example`
+- [x] Next.js + TS + Tailwind 초기화, `.gitignore`, `.env.example`
 - [ ] Auth.js v5 + Google + 도메인 제한
 - [ ] Airtable 읽기 함수 (`프로그램`, `할일`) — 서버 전용
 - [ ] 대시보드: 프로그램 카드 / 내 할 일 / 캘린더 임베드
@@ -217,7 +219,7 @@ Airtable로 간다. 2인·소량 데이터에 별도 DB는 과하다.
 - 동시 수정 충돌이 실제로 발생할 때
 - 첨부 용량이 커질 때(→ Drive로 분리)
 
-대비는 하나뿐: 모든 Airtable 접근이 `lib/airtable/`를 통과할 것.
+대비는 하나뿐: 모든 Airtable 접근이 `src/lib/airtable/`를 통과할 것.
 화면 코드에 Airtable이 새어 나가면 이전 비용이 폭증한다.
 
 ## 12. 변경 기록
@@ -233,3 +235,5 @@ HANDOFF.md보다 이 파일이 최신이다.
   동기화는 유형이 늘수록 어긋난다. `캘린더이벤트ID` 필드 계획 철회.
 - `기념일` 테이블 계획 철회. 생일·경조사·공휴일은 구글 캘린더가 담당.
 - 방향: 지금은 모으는 것이 목적. 장기적으로 통합 ERP로 확장한다.
+- `src/` 레이아웃 채택. 문서의 `lib/`·`config/` 경로를 `src/` 기준으로 수정.
+- 웹폰트(Geist)를 쓰지 않는다. 한글 우선 시스템 폰트 스택으로 대체.

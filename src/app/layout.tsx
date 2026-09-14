@@ -1,0 +1,22 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "오픈가든 포털",
+  description: "오픈가든 사내 포털",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="ko" className="h-full antialiased">
+      <body className="min-h-full flex flex-col bg-white text-neutral-900">
+        {children}
+      </body>
+    </html>
+  );
+}
