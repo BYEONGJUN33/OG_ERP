@@ -11,6 +11,11 @@ function createEventUrl(calendarId: string): string {
   return url.toString();
 }
 
+/** 구글 캘린더에서 직접 열기. 임베드가 비면 여기서 원인을 가른다. */
+function openCalendarUrl(calendarId: string): string {
+  return `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(calendarId)}`;
+}
+
 /**
  * 구글 캘린더 임베드. 1단계는 보기만 한다.
  * 반복 일정·공휴일·알림은 구글이 담당한다. (원칙 9)
@@ -33,7 +38,15 @@ export function CalendarEmbed() {
 
   return (
     <div>
-      <div className="mb-2 flex justify-end">
+      <div className="mb-2 flex justify-end gap-2">
+        <a
+          href={openCalendarUrl(calendarId)}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
+        >
+          구글 캘린더에서 열기
+        </a>
         <a
           href={createEventUrl(calendarId)}
           target="_blank"
