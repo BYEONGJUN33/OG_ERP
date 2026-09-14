@@ -24,8 +24,8 @@ type Palette = {
 async function fetchJson<T>(url: string, accessToken: string): Promise<T | null> {
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
-    // 색은 거의 안 바뀌지만 사용자가 바꾸면 바로 반영돼야 한다.
-    next: { revalidate: 300 },
+    // 색을 바꾸면 곧 반영돼야 한다. 색표는 가벼우니 짧게 잡는다.
+    next: { revalidate: 60 },
   });
   if (!response.ok) return null;
   return (await response.json()) as T;

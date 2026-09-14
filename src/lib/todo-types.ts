@@ -3,7 +3,7 @@
  * Airtable 접근 코드(`server-only`)와 섞으면 클라이언트 번들이 깨지므로 분리한다.
  */
 
-export const TODO_STATUSES = ["예정", "진행중", "완료", "보류"] as const;
+export const TODO_STATUSES = ["할 일", "진행중", "완료", "보류"] as const;
 export type TodoStatus = (typeof TODO_STATUSES)[number];
 
 export const TODO_CATEGORIES = [

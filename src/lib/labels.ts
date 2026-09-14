@@ -28,7 +28,7 @@ export function categoryChip(name: string): string {
 }
 
 export function statusChip(name: string): string {
-  return STATUS_CHIP[name] ?? STATUS_CHIP.예정;
+  return STATUS_CHIP[name] ?? STATUS_CHIP["할 일"];
 }
 
 /** 달력 막대에 쓸 hex. 위 칩 색과 같은 값이다. */

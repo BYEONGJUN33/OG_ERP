@@ -61,7 +61,9 @@ function toTodo(record: { id: string; fields: Partial<Row> }): Todo {
     owner: record.fields.담당자 ?? "",
     due: record.fields.마감일 ?? null,
     start: record.fields.시작일 ?? null,
-    status: (record.fields.상태 ?? "예정") as TodoStatus,
+    // 옛 이름 '예정'이 남아 있어도 '할 일'로 읽는다.
+    status: ((record.fields.상태 === "예정" ? "할 일" : record.fields.상태) ??
+      "할 일") as TodoStatus,
     category: record.fields.분류 ?? "",
     memo: record.fields.메모 ?? "",
     completedAt: record.fields.완료일시 ?? null,
@@ -156,14 +158,14 @@ export type NewTodo = {
   category: TodoCategory | null;
 };
 
-/** 할 일 추가. 새로 만든 것은 항상 '예정'으로 시작한다. */
+/** 할 일 추가. 새로 만든 것은 항상 '할 일' 상태로 시작한다. */
 export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
   try {
     const fields: FieldValues<Row> = {
       내용: input.title,
       담당자: input.owner,
       작성자: input.author,
-      상태: "예정",
+      상태: "할 일",
     };
     if (input.due) fields.마감일 = input.due;
     if (input.category) fields.분류 = input.category;
