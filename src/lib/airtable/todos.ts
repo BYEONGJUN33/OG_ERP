@@ -279,3 +279,23 @@ export async function addComment(
     throw error;
   }
 }
+
+/**
+ * 마감일이 있는 할 일 전부. 달력에 겹쳐 그릴 때 쓴다.
+ * 범위 거르기는 코드에서 한다 — 2명이 쌓는 양이라 전부 받아도 부담이 없고,
+ * Airtable 수식으로 날짜를 비교하면 시간대에서 어긋난다.
+ */
+export async function getTodosWithDueDate(): Promise<Result<Todo[]>> {
+  try {
+    const records = await selectRecords<Row>(TABLE, {
+      fields: FIELDS,
+      filterByFormula: "{마감일} != ''",
+      revalidate: 60,
+    });
+
+    return ok(records.map(toTodo));
+  } catch (error) {
+    if (error instanceof AirtableError) return fail(error.message);
+    throw error;
+  }
+}

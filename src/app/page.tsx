@@ -43,6 +43,11 @@ export default async function Home() {
     getEvents(dayStart, dayEnd),
   ]);
 
+  // 할 일은 위 구획에 이미 있다. 오늘 일정에서 또 보여주지 않는다.
+  const schedule = events.ok
+    ? ok(events.data.filter((event) => event.source === "google"))
+    : events;
+
   const { mine, team } = splitByOwner(open, member);
 
   return (
@@ -109,7 +114,7 @@ export default async function Home() {
           </Link>
         }
       >
-        <EventList result={events} emptyMessage="오늘 잡힌 일정이 없다." />
+        <EventList result={schedule} emptyMessage="오늘 잡힌 일정이 없다." />
       </Section>
     </main>
   );

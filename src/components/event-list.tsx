@@ -1,4 +1,5 @@
 import { EmptyState, ErrorState } from "@/components/data-state";
+import { EventLink } from "@/components/event-link";
 import type { PortalEvent } from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
@@ -36,21 +37,13 @@ export function EventList({
             {eventTime(event)}
           </span>
           <span className="min-w-0 flex-1 text-sm">
-            {event.href ? (
-              <a
-                href={event.href}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:underline"
-              >
-                {event.title}
-              </a>
-            ) : (
-              event.title
-            )}
+            <EventLink event={event} className="hover:underline" />
           </span>
           {event.location ? (
             <span className="text-xs text-neutral-500">{event.location}</span>
+          ) : null}
+          {event.owner ? (
+            <span className="text-xs text-neutral-500">{event.owner}</span>
           ) : null}
           <span
             className={`rounded px-2 py-0.5 text-xs ${

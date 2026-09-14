@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ErrorState } from "@/components/data-state";
+import { EventLink } from "@/components/event-link";
 import { eventTime } from "@/components/event-list";
 import { shiftMonth, WEEKDAYS } from "@/lib/calendar/month";
 import { eventDate, type PortalEvent } from "@/lib/calendar/types";
@@ -111,19 +112,7 @@ export function MonthCalendar({
                               <span className="text-neutral-400">
                                 {event.allDay ? "" : `${eventTime(event)} `}
                               </span>
-                              {event.href ? (
-                                <a
-                                  href={event.href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  title={event.title}
-                                  className="hover:underline"
-                                >
-                                  {event.title}
-                                </a>
-                              ) : (
-                                event.title
-                              )}
+                              <EventLink event={event} className="hover:underline" />
                             </li>
                           ))}
                           {events.length > 3 ? (

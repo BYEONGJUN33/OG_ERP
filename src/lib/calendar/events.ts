@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getGoogleEvents } from "@/lib/calendar/sources/google";
+import { getTodoEvents } from "@/lib/calendar/sources/todos";
 import { byStart, type PortalEvent } from "@/lib/calendar/types";
 import { fail, ok, type Result } from "@/lib/result";
 import { auth } from "@/lib/auth";
@@ -42,11 +43,15 @@ export async function getEvents(
   }
 
   const ids = calendarIdsFor(session.user.email);
-  if (ids.length === 0) return ok([]);
+  const token = session.accessToken;
 
   try {
-    const events = await getGoogleEvents(ids, session.accessToken, from, to);
-    return ok(events.sort(byStart));
+    const [google, todos] = await Promise.all([
+      ids.length > 0 ? getGoogleEvents(ids, token, from, to) : [],
+      getTodoEvents(from, to),
+    ]);
+
+    return ok([...google, ...todos].sort(byStart));
   } catch (error) {
     return fail(error instanceof Error ? error.message : "일정을 읽지 못했다.");
   }
