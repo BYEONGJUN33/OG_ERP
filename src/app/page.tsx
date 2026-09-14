@@ -93,7 +93,7 @@ export default async function Home() {
       </Section>
 
       <Section title="캘린더">
-        <CalendarEmbed />
+        <CalendarEmbed viewerEmail={session?.user.email} />
       </Section>
     </main>
   );

@@ -4,12 +4,17 @@ import { EmptyState } from "@/components/data-state";
  * 구글 캘린더 임베드. 1단계는 보기만 한다.
  * 반복 일정·공휴일·알림은 구글이 담당한다. (원칙 9)
  *
- * 캘린더는 한 화면에 겹쳐 본다. 다만 출처는 여럿일 수 있다 —
- * 공용 캘린더 + 개인 + 대한민국 공휴일처럼.
- * `GOOGLE_CALENDAR_ID`에 쉼표로 나열한다. 맨 앞이 기본 캘린더고,
- * [일정 추가]는 거기에 만든다.
+ * 캘린더는 한 화면에 겹쳐 본다. 다만 출처는 여럿이다 —
+ * 공용 캘린더 + 대한민국 공휴일, 그리고 보는 사람 본인의 캘린더.
+ *
+ * `GOOGLE_CALENDAR_ID`에는 **모두가 함께 보는 것만** 쉼표로 나열한다.
+ * 개인 캘린더는 여기 넣지 마라 — 넣으면 남의 개인 일정이 모두에게 보이고,
+ * 서로 공유해두지 않은 사람 화면에서는 빈 칸으로만 나온다.
+ * 본인 캘린더는 로그인한 이메일로 코드가 붙인다.
+ *
+ * 맨 앞이 기본 캘린더고 [일정 추가]는 거기에 만든다.
  */
-function calendarIds(): string[] {
+function sharedCalendarIds(): string[] {
   return (process.env.GOOGLE_CALENDAR_ID ?? "")
     .split(",")
     .map((id) => id.trim())
@@ -41,8 +46,15 @@ function openCalendarUrl(primary: string): string {
   return `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(primary)}`;
 }
 
-export function CalendarEmbed() {
-  const ids = calendarIds();
+export function CalendarEmbed({ viewerEmail }: { viewerEmail?: string | null }) {
+  const shared = sharedCalendarIds();
+
+  // 본인 캘린더를 마지막에 얹는다. 이미 목록에 있으면 두 번 넣지 않는다.
+  const own = viewerEmail?.trim().toLowerCase();
+  const ids =
+    own && !shared.some((id) => id.toLowerCase() === own)
+      ? [...shared, own]
+      : shared;
 
   if (ids.length === 0) {
     return (
