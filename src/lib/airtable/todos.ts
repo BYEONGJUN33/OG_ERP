@@ -154,6 +154,7 @@ export type NewTodo = {
   owner: MemberName;
   /** 만든 사람. 포털이 채운다. */
   author: MemberName;
+  start: string | null;
   due: string | null;
   category: TodoCategory | null;
 };
@@ -167,6 +168,7 @@ export async function createTodo(input: NewTodo): Promise<Result<Todo>> {
       작성자: input.author,
       상태: "할 일",
     };
+    if (input.start) fields.시작일 = input.start;
     if (input.due) fields.마감일 = input.due;
     if (input.category) fields.분류 = input.category;
 

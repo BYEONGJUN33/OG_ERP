@@ -21,7 +21,14 @@ const COLUMNS: { title: string; match: TodoStatus[] }[] = [
   { title: "완료", match: ["완료"] },
 ];
 
-export function TodoBoard({ result }: { result: Result<Todo[]> }) {
+export function TodoBoard({
+  result,
+  me = null,
+}: {
+  result: Result<Todo[]>;
+  /** 내 일을 먼저 올린다. 남의 일보다 내 일이 먼저 눈에 들어와야 한다. */
+  me?: string | null;
+}) {
   if (!result.ok) return <ErrorState message={result.message} />;
 
   const today = todayInSeoul();
@@ -29,9 +36,17 @@ export function TodoBoard({ result }: { result: Result<Todo[]> }) {
   return (
     <div className="grid items-start gap-3 sm:grid-cols-3">
       {COLUMNS.map((column) => {
-        const todos = result.data.filter((todo) =>
-          (column.match as string[]).includes(todo.status),
-        );
+        const todos = result.data
+          .filter((todo) => (column.match as string[]).includes(todo.status))
+          .sort((a, b) => {
+            // 내 일이 위로, 그다음 마감 임박순, 기한 없는 건 맨 뒤로.
+            const mineFirst = Number(b.owner === me) - Number(a.owner === me);
+            if (mineFirst !== 0) return mineFirst;
+            if (a.due && b.due) return a.due.localeCompare(b.due);
+            if (a.due) return -1;
+            if (b.due) return 1;
+            return 0;
+          });
 
         return (
           <div key={column.title} className="rounded-[3px] bg-canvas p-2.5">

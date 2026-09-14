@@ -12,6 +12,9 @@ import type { Todo } from "@/lib/todo-types";
  * 아래에 따로 모아 "날짜를 채우면 여기 그려진다"를 보이게 한다.
  */
 const DAY_PX = 34;
+const ROW_PX = 36;
+/** 건수가 적어도 이만큼은 자리를 잡는다. 한 건일 때 납작해 보이지 않게. */
+const MIN_ROWS = 6;
 
 function daysBetween(a: string, b: string): number {
   return Math.round(
@@ -63,6 +66,7 @@ export function TodoTimeline({
             </div>
           </div>
 
+          <div style={{ minHeight: MIN_ROWS * ROW_PX }}>
           {drawn.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-muted">
               시작일과 마감일이 모두 있는 할 일이 없다.
@@ -84,7 +88,7 @@ export function TodoTimeline({
                     </Link>
                   </div>
 
-                  <div className="relative h-9 flex-1">
+                  <div className="relative flex-1" style={{ height: ROW_PX }}>
                     <div
                       className="absolute top-0 bottom-0 w-px bg-brand-600"
                       style={{ left: daysBetween(first, today) * DAY_PX }}
@@ -105,6 +109,7 @@ export function TodoTimeline({
               );
             })
           )}
+          </div>
         </div>
       </div>
 

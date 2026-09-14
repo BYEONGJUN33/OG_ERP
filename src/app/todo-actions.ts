@@ -41,13 +41,18 @@ export async function addTodoAction(
     return { error: "담당자를 고르지 않았다." };
   }
 
+  const start = String(formData.get("start") ?? "").trim();
   const due = String(formData.get("due") ?? "").trim();
+  if (start && due && start > due) {
+    return { error: "시작일이 마감일보다 늦다." };
+  }
   const category = String(formData.get("category") ?? "");
 
   const result = await createTodo({
     title,
     owner: owner as MemberName,
     author,
+    start: start || null,
     due: due || null,
     category: (TODO_CATEGORIES as readonly string[]).includes(category)
       ? (category as TodoCategory)

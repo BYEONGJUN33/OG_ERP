@@ -1,5 +1,7 @@
 import { ErrorState } from "@/components/data-state";
 import { EventLink } from "@/components/event-link";
+import { NowLine } from "@/components/now-line";
+import { WORK_END_HOUR, WORK_START_HOUR } from "@/config/workday";
 import { minutesOfDay } from "@/lib/calendar/week";
 import { eventDate, type PortalEvent } from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
@@ -11,9 +13,7 @@ import type { Result } from "@/lib/result";
  * 종일 일정과 할 일 마감은 시간이 없으므로 맨 위 띠에 따로 모은다.
  */
 
-const PX_PER_MIN = 40 / 60; // 한 시간 40px
-const DEFAULT_FROM = 8;
-const DEFAULT_TO = 20;
+export const PX_PER_MIN = 44 / 60; // 한 시간 44px
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -89,8 +89,9 @@ export function WeekCalendar({
   const ends = timed.map((event) =>
     Math.ceil(minutesOfDay(event.end ?? event.start) / 60),
   );
-  const fromHour = Math.min(DEFAULT_FROM, ...starts);
-  const toHour = Math.max(DEFAULT_TO, ...ends);
+  // 정규 시간이 기본 눈금이고, 그 밖에 일정이 있으면 넓힌다.
+  const fromHour = Math.min(WORK_START_HOUR, ...starts);
+  const toHour = Math.max(WORK_END_HOUR, ...ends);
   const fromMin = fromHour * 60;
   const hours = Array.from({ length: toHour - fromHour }, (_, i) => fromHour + i);
   const bodyHeight = (toHour - fromHour) * 60 * PX_PER_MIN;
@@ -171,9 +172,15 @@ export function WeekCalendar({
                 <div
                   key={hour}
                   style={{ height: 60 * PX_PER_MIN }}
-                  className="border-t border-line first:border-t-0"
+                  className={`border-t border-line first:border-t-0 ${
+                    hour < WORK_START_HOUR || hour >= WORK_END_HOUR ? "bg-canvas" : ""
+                  }`}
                 />
               ))}
+
+              {day === today ? (
+                <NowLine fromMin={fromMin} pxPerMin={PX_PER_MIN} />
+              ) : null}
 
               {placed.map((event) => (
                 <div

@@ -1,6 +1,6 @@
 import { AppShell, Section } from "@/components/app-shell";
 import { Tabs } from "@/components/tabs";
-import { TodoAddForm } from "@/components/todo-add-form";
+import { TodoAddButton } from "@/components/todo-add-button";
 import { TodoBoard } from "@/components/todo-board";
 import { TodoList } from "@/components/todo-list";
 import { TodoTimeline } from "@/components/todo-timeline";
@@ -12,7 +12,7 @@ import { todayInSeoul } from "@/lib/date";
 import { fail, ok } from "@/lib/result";
 import type { Todo } from "@/lib/todo-types";
 
-const VIEWS = ["목록", "보드", "타임라인"] as const;
+const VIEWS = ["보드", "목록", "타임라인"] as const;
 type View = (typeof VIEWS)[number];
 
 /** 담당자별로 묶는다. 섞어놓고 이름표만 붙이지 않는다. */
@@ -30,7 +30,7 @@ export default async function TodosPage({ searchParams }: PageProps<"/todos">) {
   const { view } = await searchParams;
   const active: View = (VIEWS as readonly string[]).includes(String(view))
     ? (view as View)
-    : "목록";
+    : "보드";
 
   const session = await auth();
   const member = session?.user.member ?? null;
@@ -55,23 +55,22 @@ export default async function TodosPage({ searchParams }: PageProps<"/todos">) {
     <AppShell
       title="할 일"
       subtitle={open.ok ? `끝나지 않은 일 ${open.data.length}건` : undefined}
+      action={
+        member ? (
+          <TodoAddButton members={members} defaultOwner={member} />
+        ) : null
+      }
     >
       <Tabs
         active={active}
         items={VIEWS.map((name) => ({
-          href: name === "목록" ? "/todos" : `/todos?view=${name}`,
+          href: name === "보드" ? "/todos" : `/todos?view=${name}`,
           label: name,
         }))}
       />
 
       {active === "목록" ? (
         <>
-          {member ? (
-            <div className="mb-5">
-              <TodoAddForm members={members} defaultOwner={member} />
-            </div>
-          ) : null}
-
           {!open.ok || open.data.length === 0 ? (
             <TodoList result={open} emptyMessage="남은 일이 없다." />
           ) : (
@@ -93,7 +92,7 @@ export default async function TodosPage({ searchParams }: PageProps<"/todos">) {
         </>
       ) : null}
 
-      {active === "보드" ? <TodoBoard result={all} /> : null}
+      {active === "보드" ? <TodoBoard result={all} me={member} /> : null}
 
       {active === "타임라인" ? (
         <TodoTimeline result={all} days={days} today={today} />
