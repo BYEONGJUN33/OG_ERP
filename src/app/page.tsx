@@ -1,16 +1,31 @@
+import { CalendarEmbed } from "@/components/calendar-embed";
+import { ProgramCards } from "@/components/program-cards";
+import { TodoList } from "@/components/todo-list";
+import { getPrograms } from "@/lib/airtable/programs";
+import { getMyTodos } from "@/lib/airtable/todos";
 import { auth, signOut } from "@/lib/auth";
+import { fail } from "@/lib/result";
 
 export default async function Home() {
   const session = await auth();
+  const member = session?.user.member ?? null;
+
+  // 두 구획을 나란히 불러온다. 하나가 실패해도 다른 하나는 그대로 보인다.
+  const [programs, todos] = await Promise.all([
+    getPrograms(),
+    member
+      ? getMyTodos(member)
+      : Promise.resolve(fail<never[]>("로그인 정보를 읽지 못했다")),
+  ]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <div className="flex items-start justify-between gap-4">
+    <main className="mx-auto w-full max-w-5xl px-4 py-8">
+      <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">오픈가든 포털</h1>
-          <p className="mt-1 text-sm text-neutral-600">
-            {session?.user.member}님으로 로그인했다.
-          </p>
+          {member ? (
+            <p className="mt-1 text-sm text-neutral-600">{member}님</p>
+          ) : null}
         </div>
 
         <form
@@ -26,11 +41,28 @@ export default async function Home() {
             로그아웃
           </button>
         </form>
-      </div>
+      </header>
 
-      <p className="mt-10 text-sm text-neutral-500">
-        다음 단계는 Airtable 읽기와 프로그램 카드다.
-      </p>
+      <Section title="프로그램">
+        <ProgramCards result={programs} />
+      </Section>
+
+      <Section title="내 할 일">
+        <TodoList result={todos} />
+      </Section>
+
+      <Section title="캘린더">
+        <CalendarEmbed />
+      </Section>
     </main>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 text-sm font-medium text-neutral-500">{title}</h2>
+      {children}
+    </section>
   );
 }

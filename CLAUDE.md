@@ -200,9 +200,9 @@ type PortalEvent = {
 ## 10. 1단계 체크리스트
 
 - [x] Next.js + TS + Tailwind 초기화, `.gitignore`, `.env.example`
-- [ ] Auth.js v5 + Google + 도메인 제한
-- [ ] Airtable 읽기 함수 (`프로그램`, `할일`) — 서버 전용
-- [ ] 대시보드: 프로그램 카드 / 내 할 일 / 캘린더 임베드
+- [~] Auth.js v5 + Google + 도메인 제한 (코드 완료, 실제 로그인 미검증)
+- [x] Airtable 읽기 함수 (`프로그램`, `할일`) — 서버 전용
+- [x] 대시보드: 프로그램 카드 / 내 할 일 / 캘린더 임베드
 - [ ] 기존 HTML 도구를 `public/tools/`에 배치 (키 검사 후)
 - [ ] Vercel 프로젝트 + `app.open-garden.co.kr`
 
@@ -237,3 +237,5 @@ HANDOFF.md보다 이 파일이 최신이다.
 - 방향: 지금은 모으는 것이 목적. 장기적으로 통합 ERP로 확장한다.
 - `src/` 레이아웃 채택. 문서의 `lib/`·`config/` 경로를 `src/` 기준으로 수정.
 - 웹폰트(Geist)를 쓰지 않는다. 한글 우선 시스템 폰트 스택으로 대체.
+- 조회 실패를 예외 대신 `Result<T>`로 돌린다(`src/lib/result.ts`).
+  한 구획이 실패해도 나머지 구획은 그대로 보이게 하려는 것이다.
