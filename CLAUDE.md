@@ -68,6 +68,9 @@ Airtable은 뒤에서 데이터를 담는 곳이다. 새 화면을 만들 때마
 - 인증: Auth.js v5 (`next-auth@5`), Google provider, `hd` 도메인 제한
 - 데이터: Airtable REST (서버에서만)
 - 일정: 1단계는 Google Calendar 임베드 iframe.
+  캘린더는 한 화면에 겹쳐 본다. 다만 출처는 여럿이다 —
+  공용 + 개인 + 대한민국 공휴일. "캘린더 1개"는 화면이 하나라는 뜻이지
+  출처가 하나라는 뜻이 아니다.
   2단계에 자체 뷰로 교체(FullCalendar 또는 react-big-calendar, 그때 결정).
   구글 이벤트는 `singleEvents=true`로 읽는다 — 반복을 구글이 펼쳐 준다.
   RRULE 파싱 코드를 쓰지 마라. 공휴일은 구글 공휴일 캘린더 구독으로 해결.
@@ -95,7 +98,7 @@ AUTH_GOOGLE_ID
 AUTH_GOOGLE_SECRET
 AUTH_URL              # 로컬만. Vercel에서는 생략
 ALLOWED_HD=open-garden.co.kr
-GOOGLE_CALENDAR_ID
+GOOGLE_CALENDAR_ID    # 쉼표로 여러 개. 맨 앞이 기본 캘린더
 ```
 
 `.env.example`에는 위 이름만 둔다. `.env*`는 `.gitignore`에 넣는다.
@@ -276,6 +279,9 @@ HANDOFF.md보다 이 파일이 최신이다.
 - 댓글 추가(`할일.댓글` 한 칸). 테이블을 따로 만들지 않는다 —
   한 건에 한두 개라 자식 테이블이 값어치보다 비싸다.
   읽고-고쳐-쓰기이므로 쓰기 직전에 캐시 없이 다시 읽는다.
+- 환경변수는 읽을 때 `trim()`한다. 붙여넣을 때 딸려온 줄바꿈 하나로
+  요청이 통째로 거절당한다(구글 400, Airtable 422).
+- 캘린더 임베드가 여러 출처를 받는다(쉼표 구분). 맨 앞이 기본.
 - 캘린더 [일정 추가]는 구글 등록 화면으로 넘긴다. 폼을 만들지 않는다.
   할 일을 캘린더로 보내는 버튼은 만들지 않는다(원칙 9).
 - 칸 비우기가 422로 실패하던 버그 수정. 빈 문자열 → `null`.
