@@ -48,15 +48,16 @@ export function byStart(a: PortalEvent, b: PortalEvent): number {
 /**
  * 일정이 덮는 날짜 범위(양끝 포함).
  *
- * 구글의 종일 일정은 끝 날짜가 **다음 날**로 온다(9/14 하루짜리면 end=9/15).
- * 그대로 쓰면 하루씩 길게 그려지므로 하루를 뺀다.
+ * **끝 날짜를 다음 날로 주는 건 구글의 규칙이다**(9/14 하루짜리면 end=9/15).
+ * 그래서 구글에서 온 종일 일정만 하루를 뺀다. 우리 데이터(할 일 기간)는
+ * 끝 날짜가 곧 마지막 날이므로 그대로 쓴다 — 여기서 빼면 하루가 줄어든다.
  */
 export function eventRange(event: PortalEvent): { start: string; end: string } {
   const start = eventDate(event.start);
   if (!event.end) return { start, end: start };
 
   let end = eventDate(event.end);
-  if (event.allDay) {
+  if (event.allDay && event.source === "google") {
     const previous = new Date(`${end}T00:00:00Z`);
     previous.setUTCDate(previous.getUTCDate() - 1);
     end = previous.toISOString().slice(0, 10);
