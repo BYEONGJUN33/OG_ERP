@@ -5,10 +5,10 @@ import {
   OBSERVANCE_GRAY,
   OFF_DAY_RED,
 } from "@/lib/calendar/colors";
-import type { PortalEvent } from "@/lib/calendar/types";
+import type { PortalEvent, WritableCalendar } from "@/lib/calendar/types";
 
 /**
- * 구글 캘린더에서 일정을 읽는다. 읽기만 한다.
+ * 구글 캘린더에서 일정을 읽는다. 등록은 `calendar/write.ts`.
  *
  * `singleEvents=true`로 요청하면 **구글이 반복 일정을 펼쳐서** 준다.
  * 그래서 RRULE을 우리가 해석할 일이 없다. (원칙 3·9)
@@ -25,7 +25,7 @@ type Palette = {
 };
 
 /** 대한민국 공휴일 캘린더인가. 이 캘린더는 색을 고정으로 칠한다. */
-function isHolidayCalendar(calendarId: string): boolean {
+export function isHolidayCalendar(calendarId: string): boolean {
   return calendarId.includes("#holiday@group.v.calendar.google.com");
 }
 
@@ -39,17 +39,30 @@ async function fetchJson<T>(url: string, accessToken: string): Promise<T | null>
   return (await response.json()) as T;
 }
 
+type CalendarListItem = {
+  id: string;
+  summary?: string;
+  summaryOverride?: string;
+  backgroundColor?: string;
+  accessRole?: string;
+};
+
+/** 내 구글 캘린더 목록. 실패하면 빈 목록 — 색·이름이 빠질 뿐 화면은 산다. */
+async function getCalendarList(accessToken: string): Promise<CalendarListItem[]> {
+  const list = await fetchJson<{ items?: CalendarListItem[] }>(
+    "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+    accessToken,
+  );
+  return list?.items ?? [];
+}
+
 /**
  * 캘린더 색을 읽는다. 실패해도 일정은 보여야 하므로 빈 표를 돌려준다 —
  * 색이 없으면 회색으로 그릴 뿐 화면이 죽지는 않는다.
  */
 async function getPalette(accessToken: string): Promise<Palette> {
-  const list = await fetchJson<{
-    items?: { id: string; backgroundColor?: string }[];
-  }>("https://www.googleapis.com/calendar/v3/users/me/calendarList", accessToken);
-
   const calendar: Record<string, string> = {};
-  for (const item of list?.items ?? []) {
+  for (const item of await getCalendarList(accessToken)) {
     if (item.backgroundColor) calendar[item.id] = item.backgroundColor;
   }
   return { calendar };
@@ -158,4 +171,33 @@ export async function getGoogleEvents(
     calendarIds.map((id) => fetchOne(id, accessToken, from, to, palette)),
   );
   return pages.flat();
+}
+
+/**
+ * 포털에서 일정을 넣을 수 있는 캘린더.
+ * 화면에 겹쳐 보는 캘린더 중 이 사람이 쓰기 권한을 가진 것만. 공휴일은 뺀다.
+ * 순서는 `ids` 순서 그대로 — 맨 앞(공용)이 기본 선택이다.
+ */
+export async function getWritableGoogleCalendars(
+  ids: string[],
+  accessToken: string,
+): Promise<WritableCalendar[]> {
+  const list = await getCalendarList(accessToken);
+  const byId = new Map(list.map((item) => [item.id.toLowerCase(), item]));
+
+  return ids
+    .filter((id) => !isHolidayCalendar(id))
+    .flatMap((id) => {
+      const item = byId.get(id.toLowerCase());
+      if (!item || (item.accessRole !== "owner" && item.accessRole !== "writer")) {
+        return [];
+      }
+      return [
+        {
+          id,
+          name: item.summaryOverride ?? item.summary ?? id,
+          color: item.backgroundColor,
+        },
+      ];
+    });
 }

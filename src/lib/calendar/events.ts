@@ -1,8 +1,15 @@
 import "server-only";
 
-import { getGoogleEvents } from "@/lib/calendar/sources/google";
+import {
+  getGoogleEvents,
+  getWritableGoogleCalendars,
+} from "@/lib/calendar/sources/google";
 import { getTodoEvents } from "@/lib/calendar/sources/todos";
-import { byStart, type PortalEvent } from "@/lib/calendar/types";
+import {
+  byStart,
+  type PortalEvent,
+  type WritableCalendar,
+} from "@/lib/calendar/types";
 import { fail, ok, type Result } from "@/lib/result";
 import { auth } from "@/lib/auth";
 
@@ -54,5 +61,19 @@ export async function getEvents(
     return ok([...google, ...todos].sort(byStart));
   } catch (error) {
     return fail(error instanceof Error ? error.message : "일정을 읽지 못했다.");
+  }
+}
+
+/** 등록 창에 띄울 캘린더. 읽지 못하면 빈 목록 — 창이 그렇다고 알린다. */
+export async function getWritableCalendars(): Promise<WritableCalendar[]> {
+  const session = await auth();
+  if (!session?.accessToken) return [];
+  try {
+    return await getWritableGoogleCalendars(
+      calendarIdsFor(session.user.email),
+      session.accessToken,
+    );
+  } catch {
+    return [];
   }
 }

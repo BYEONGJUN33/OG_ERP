@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ErrorState } from "@/components/data-state";
+import { ComposeSlot } from "@/components/event-composer";
 import { EventLink } from "@/components/event-link";
 import { eventTime } from "@/components/event-list";
 import { shiftMonth, WEEKDAYS } from "@/lib/calendar/month";
@@ -153,15 +154,17 @@ export function MonthCalendar({
                   {week.map((day) => {
                     const inMonth = Number(day.slice(5, 7)) === month;
 
+                    // 빈 칸을 누르면 그 날짜로 종일 일정 창이 열린다.
                     return (
-                      <div
+                      <ComposeSlot
                         key={day}
+                        date={day}
+                        allDay
                         className={`${compact ? "min-h-16" : "min-h-24"} border-l border-line px-1.5 pb-1 ${
                           inMonth ? "bg-surface" : "bg-canvas"
                         }`}
                         style={{ paddingTop: 4 + shown * LANE_H }}
-                      >
-                      </div>
+                      />
                     );
                   })}
                 </div>

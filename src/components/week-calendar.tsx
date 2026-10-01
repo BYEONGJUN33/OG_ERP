@@ -1,4 +1,5 @@
 import { ErrorState } from "@/components/data-state";
+import { ComposeSlot } from "@/components/event-composer";
 import { EventLink } from "@/components/event-link";
 import { NowLine } from "@/components/now-line";
 import { WORK_END_HOUR, WORK_START_HOUR } from "@/config/workday";
@@ -160,7 +161,7 @@ export function WeekCalendar({
         <div className="relative col-span-7" style={{ minHeight: 26 + allDayLanes * 18 }}>
           <div className="grid h-full grid-cols-7">
             {days.map((day) => (
-              <div key={day} className="border-l border-line" />
+              <ComposeSlot key={day} date={day} allDay className="border-l border-line" />
             ))}
           </div>
 
@@ -213,9 +214,12 @@ export function WeekCalendar({
               className="relative border-l border-line"
               style={{ height: bodyHeight }}
             >
+              {/* 빈 시간 칸을 누르면 그 날짜·시각으로 창이 열린다 */}
               {hours.map((hour) => (
-                <div
+                <ComposeSlot
                   key={hour}
+                  date={day}
+                  hour={hour}
                   style={{ height: 60 * PX_PER_MIN }}
                   className={`border-t border-line first:border-t-0 ${
                     hour < WORK_START_HOUR || hour >= WORK_END_HOUR ? "bg-canvas" : ""

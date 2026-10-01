@@ -96,3 +96,10 @@ export function dayTone(day: string, off: Set<string>): "red" | "blue" | null {
   if (weekday === 6) return "blue";
   return null;
 }
+
+/** 일정을 넣을 수 있는 캘린더. 등록 창의 선택지. */
+export type WritableCalendar = {
+  id: string;
+  name: string;
+  color?: string;
+};
