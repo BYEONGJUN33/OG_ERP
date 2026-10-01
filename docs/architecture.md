@@ -98,7 +98,63 @@ ERP 쪽에서 도와줄 일이 생기면 이걸 먼저 알려라.
 
 ---
 
-## 사례: 관공서 영업 지도 (2026-10-01 결정)
+## 사례: 관공서 영업 지도 (2026-10-01 결정, 같은 날 변경)
+
+**별도 저장소 · 별도 Vercel 프로젝트로 간다(방법 B).** 처음엔 ERP 안에 넣기로
+했으나(방법 A), 지도는 담당 세션이 전국 조사와 기능 수정을 계속하는 중이라
+저장소를 나누는 쪽으로 바꿨다. ERP는 링크 한 줄만 갖는다.
+
+| | |
+|---|---|
+| 원본 | 비공개 GitHub `BYEONGJUN33/gov-map`, `main` |
+| 배포 | Vercel 별도 프로젝트. `main`에 push → 운영 자동 배포 |
+| 주소 | `https://map.open-garden.co.kr` (PC·폰 같은 주소) |
+| 형태 | 정적 HTML/JS/CSS + `api/`의 Vercel Functions(`config`, `visits`). 상시 서버 없음 |
+| 로그인 | 지도 자체 앱 비밀번호(`APP_PASSWORD`). ERP 구글 로그인은 **넘어가지 않는다** |
+| 데이터 | `지자체 영업일지`를 **읽기만** 한다 |
+
+### Vercel 프로젝트 설정
+
+- Import: `BYEONGJUN33/gov-map`, Production Branch `main`
+- Framework Preset `Other`, Build Command 비움, Output Directory 비움(저장소 루트)
+- Root Directory 비움. `.vercelignore`가 문서·도구·테스트·비밀 파일을 뺀다
+- 환경변수(이름만. 값은 사용자가 Vercel에 직접 넣는다):
+  `NAVER_MAP_KEY_ID` `AIRTABLE_TOKEN` `AIRTABLE_BASE_ID`
+  `AIRTABLE_VISITS_TABLE_ID` `APP_PASSWORD`. TMAP은 보류
+- Domains: `map.open-garden.co.kr` 추가
+
+### DNS — 이 주소에 필요한 것만
+
+DNS 관리 화면에 **한 줄만** 더한다. 나머지(홈페이지·`app`·메일의 MX/SPF 등)는 건드리지 않는다.
+
+| 타입 | 이름 | 값 |
+|---|---|---|
+| CNAME | `map` | Vercel이 Domains 화면에 보여주는 값 (보통 `cname.vercel-dns.com.`) |
+
+`app`과 같은 방식이다. 이미 `map`이라는 이름의 레코드가 있으면 먼저 보고한다.
+
+### 네이버 지도
+
+네이버 클라우드 콘솔 → Maps 앱 → Web 서비스 URL에 `https://map.open-garden.co.kr`
+추가. Vercel 미리보기 주소는 매번 바뀌므로 지도 확인은 운영 주소에서 한다.
+
+### ERP 등록
+
+`프로그램` 표에 한 줄(2026-10-01 등록, 레코드 `recWhiKbm92uzhYOx`):
+이름 `관공서 영업 지도` / 경로 `https://map.open-garden.co.kr` / 아이콘 `map-pin` /
+분류 `지도` / 노출순서 30 / 새창열기 체크.
+**사용여부는 꺼 두었다** — 주소가 살기 전에 카드가 보이면 눌러도 안 열린다.
+주소가 열리는 걸 확인하면 체크 하나로 켠다. 이후 지도 업데이트는 같은 주소라
+ERP를 고칠 일이 없다.
+
+### 회사 로그인 통합 — 지금은 안 한다
+
+ERP 로그인 쿠키는 `app.open-garden.co.kr`에만 붙어서 `map.`에서 읽히지 않는다.
+통합하려면 지도 쪽에 구글 로그인을 따로 넣거나 쿠키 도메인을 넓혀야 한다.
+필요해지면 지도 담당 세션과 따로 정한다.
+
+<details>
+<summary>버린 안: ERP 안에 넣기(방법 A)</summary>
 
 정적 HTML/JS/CSS + JSON + Node API(`/api/config`, `/api/visits`), 서버리스로 충분.
 → **방법 A, ERP 안에 넣는다.** 주소는 ERP 하위 경로 `/tools/map/`.
@@ -161,3 +217,5 @@ export async function GET() {
 `지자체 영업일지` 테이블을 **읽기만** 한다. CLAUDE.md §3의 "기존 테이블은 읽지도
 쓰지도 않는다"에 대한 예외로, 사용자가 결정했다. 쓰기와 `거래처` 링크 전환은
 여전히 §3 범위 밖이다.
+
+</details>
