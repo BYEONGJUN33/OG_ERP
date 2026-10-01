@@ -3,7 +3,13 @@ import { EventLink } from "@/components/event-link";
 import { NowLine } from "@/components/now-line";
 import { WORK_END_HOUR, WORK_START_HOUR } from "@/config/workday";
 import { isoWeek, minutesOfDay } from "@/lib/calendar/week";
-import { eventDate, eventRange, type PortalEvent } from "@/lib/calendar/types";
+import {
+  dayTone,
+  eventDate,
+  eventRange,
+  offDays,
+  type PortalEvent,
+} from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
 /**
@@ -84,6 +90,7 @@ export function WeekCalendar({
   if (!result.ok) return <ErrorState message={result.message} />;
 
   const timed = result.data.filter((event) => !event.allDay);
+  const off = offDays(result.data);
   const allDay = result.data.filter((event) => event.allDay);
 
   // 종일 일정을 여러 날 막대로 놓는다. 겹치면 아래 줄로.
@@ -126,12 +133,17 @@ export function WeekCalendar({
         </div>
         {days.map((day, index) => {
           const isToday = day === today;
+          const tone = dayTone(day, off);
+          const toneClass =
+            tone === "red" ? "text-[#d93025]" : tone === "blue" ? "text-[#1a73e8]" : "";
           return (
             <div key={day} className="border-l border-line px-2 py-1.5 text-center">
-              <div className="text-[11px] text-muted">{WEEKDAYS[index]}</div>
+              <div className={`text-[11px] ${toneClass || "text-muted"}`}>
+                {WEEKDAYS[index]}
+              </div>
               <div
                 className={`mx-auto mt-0.5 w-6 rounded-[3px] text-[13px] ${
-                  isToday ? "bg-brand-600 font-bold text-white" : "font-medium"
+                  isToday ? "bg-brand-600 font-bold text-white" : `font-medium ${toneClass}`
                 }`}
               >
                 {Number(day.slice(8, 10))}

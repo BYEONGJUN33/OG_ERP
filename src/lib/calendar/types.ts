@@ -5,7 +5,14 @@
  * 새 출처를 더할 때 = `sources/`에 파일 하나 + 등록 한 줄.
  * 그보다 많이 고쳐야 한다면 설계가 틀린 것이다.
  */
-export type PortalEventType = "구글일정" | "할일" | "연차" | "휴가" | "출장";
+export type PortalEventType =
+  | "구글일정"
+  | "공휴일" // 쉬는 날(대체공휴일 포함)
+  | "기념일" // 이름은 있지만 쉬지 않는 날(어버이날·국군의날 등)
+  | "할일"
+  | "연차"
+  | "휴가"
+  | "출장";
 
 export type PortalEvent = {
   id: string;
@@ -64,4 +71,28 @@ export function eventRange(event: PortalEvent): { start: string; end: string } {
   }
 
   return { start, end: end < start ? start : end };
+}
+
+/** 쉬는 날(공휴일) 날짜 모음. 달력이 날짜 숫자를 빨갛게 칠할 때 쓴다. */
+export function offDays(events: PortalEvent[]): Set<string> {
+  const days = new Set<string>();
+  for (const event of events) {
+    if (event.type !== "공휴일") continue;
+    const { start, end } = eventRange(event);
+    for (let d = start; d <= end; ) {
+      days.add(d);
+      const next = new Date(`${d}T00:00:00Z`);
+      next.setUTCDate(next.getUTCDate() + 1);
+      d = next.toISOString().slice(0, 10);
+    }
+  }
+  return days;
+}
+
+/** 날짜 숫자 색: 쉬는 날·일요일 빨강, 토요일 파랑, 나머지 기본. */
+export function dayTone(day: string, off: Set<string>): "red" | "blue" | null {
+  const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
+  if (off.has(day) || weekday === 0) return "red";
+  if (weekday === 6) return "blue";
+  return null;
 }

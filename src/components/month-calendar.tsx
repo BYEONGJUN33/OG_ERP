@@ -5,7 +5,12 @@ import { EventLink } from "@/components/event-link";
 import { eventTime } from "@/components/event-list";
 import { shiftMonth, WEEKDAYS } from "@/lib/calendar/month";
 import { isoWeek } from "@/lib/calendar/week";
-import { eventRange, type PortalEvent } from "@/lib/calendar/types";
+import {
+  dayTone,
+  eventRange,
+  offDays,
+  type PortalEvent,
+} from "@/lib/calendar/types";
 import type { Result } from "@/lib/result";
 
 /**
@@ -85,6 +90,9 @@ export function MonthCalendar({
 }) {
   if (!result.ok) return <ErrorState message={result.message} />;
 
+  // 쉬는 날·일요일은 빨강, 토요일은 파랑. 기념일(안 쉬는 날)은 색을 바꾸지 않는다.
+  const off = offDays(result.data);
+
   return (
     <div>
       <div className={`mb-3 flex items-center gap-2 ${compact ? "hidden" : ""}`}>
@@ -163,15 +171,14 @@ export function MonthCalendar({
                   {week.map((day) => {
                     const inMonth = Number(day.slice(5, 7)) === month;
                     const isToday = day === today;
+                    const tone = dayTone(day, off);
                     return (
                       <div key={day} className="px-1.5">
                         <span
                           className={`inline-block rounded-[3px] px-1 text-[11px] ${
                             isToday
                               ? "bg-brand-600 font-bold text-white"
-                              : inMonth
-                                ? "text-ink"
-                                : "text-faint"
+                              : `${tone === "red" ? "font-semibold text-[#d93025]" : tone === "blue" ? "text-[#1a73e8]" : "text-ink"} ${inMonth ? "" : "opacity-45"}`
                           }`}
                         >
                           {Number(day.slice(8, 10))}

@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  eventColorHex,
+  OBSERVANCE_GRAY,
+  OFF_DAY_RED,
+} from "@/lib/calendar/colors";
 import type { PortalEvent } from "@/lib/calendar/types";
 
 /**
@@ -13,13 +18,16 @@ const API = "https://www.googleapis.com/calendar/v3/calendars";
 
 export class CalendarError extends Error {}
 
-/** 캘린더별 기본색 + 일정별 지정색. 구글에서 정한 색을 그대로 쓰려고 읽는다. */
+/** 캘린더 자체의 색. 일정에 따로 정한 색이 없을 때 쓴다. */
 type Palette = {
-  /** colorId -> hex. 사용자가 일정 하나에 따로 지정한 색 */
-  event: Record<string, string>;
-  /** calendarId -> hex. 캘린더 자체의 색 */
+  /** calendarId -> hex */
   calendar: Record<string, string>;
 };
+
+/** 대한민국 공휴일 캘린더인가. 이 캘린더는 색을 고정으로 칠한다. */
+function isHolidayCalendar(calendarId: string): boolean {
+  return calendarId.includes("#holiday@group.v.calendar.google.com");
+}
 
 async function fetchJson<T>(url: string, accessToken: string): Promise<T | null> {
   const response = await fetch(url, {
@@ -32,32 +40,19 @@ async function fetchJson<T>(url: string, accessToken: string): Promise<T | null>
 }
 
 /**
- * 색표를 읽는다. 실패해도 일정은 보여야 하므로 빈 표를 돌려준다 —
+ * 캘린더 색을 읽는다. 실패해도 일정은 보여야 하므로 빈 표를 돌려준다 —
  * 색이 없으면 회색으로 그릴 뿐 화면이 죽지는 않는다.
  */
 async function getPalette(accessToken: string): Promise<Palette> {
-  const [colors, list] = await Promise.all([
-    fetchJson<{ event?: Record<string, { background?: string }> }>(
-      "https://www.googleapis.com/calendar/v3/colors",
-      accessToken,
-    ),
-    fetchJson<{ items?: { id: string; backgroundColor?: string }[] }>(
-      "https://www.googleapis.com/calendar/v3/users/me/calendarList",
-      accessToken,
-    ),
-  ]);
-
-  const event: Record<string, string> = {};
-  for (const [id, value] of Object.entries(colors?.event ?? {})) {
-    if (value.background) event[id] = value.background;
-  }
+  const list = await fetchJson<{
+    items?: { id: string; backgroundColor?: string }[];
+  }>("https://www.googleapis.com/calendar/v3/users/me/calendarList", accessToken);
 
   const calendar: Record<string, string> = {};
   for (const item of list?.items ?? []) {
     if (item.backgroundColor) calendar[item.id] = item.backgroundColor;
   }
-
-  return { event, calendar };
+  return { calendar };
 }
 
 type GoogleEvent = {
@@ -82,6 +77,10 @@ function toPortalEvent(
   const start = event.start?.dateTime ?? event.start?.date;
   if (!start) return null; // 시작이 없는 일정은 그릴 수 없다
 
+  // 공휴일 캘린더는 설명 첫 줄에 "공휴일"(쉬는 날) / "기념일"(안 쉬는 날)을 적어 보낸다.
+  const holiday = isHolidayCalendar(calendarId);
+  const offDay = holiday && (event.description ?? "").startsWith("공휴일");
+
   return {
     id: `google:${calendarId}:${event.id}`,
     title: event.summary?.trim() || "(제목 없음)",
@@ -89,15 +88,17 @@ function toPortalEvent(
     end: event.end?.dateTime ?? event.end?.date,
     allDay: Boolean(event.start?.date),
     source: "google",
-    type: "구글일정",
+    type: holiday ? (offDay ? "공휴일" : "기념일") : "구글일정",
     owner: event.creator?.displayName ?? event.creator?.email,
     location: event.location,
-    description: event.description,
+    description: holiday ? undefined : event.description,
     href: event.htmlLink,
-    // 일정에 색을 따로 지정했으면 그 색, 아니면 캘린더 색.
-    color:
-      (event.colorId ? palette.event[event.colorId] : undefined) ??
-      palette.calendar[calendarId],
+    // 공휴일은 고정색. 나머지는 일정에 정한 색, 없으면 캘린더 색.
+    color: holiday
+      ? offDay
+        ? OFF_DAY_RED
+        : OBSERVANCE_GRAY
+      : (eventColorHex(event.colorId) ?? palette.calendar[calendarId]),
   };
 }
 
