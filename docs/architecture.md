@@ -95,3 +95,69 @@ ERP 쪽에서 도와줄 일이 생기면 이걸 먼저 알려라.
 3. 읽고 쓰는 Airtable 테이블
 4. 로그인한 사람만 써야 하나(거의 그렇다)
 5. 원하는 하위 도메인
+
+---
+
+## 사례: 관공서 영업 지도 (2026-10-01 결정)
+
+정적 HTML/JS/CSS + JSON + Node API(`/api/config`, `/api/visits`), 서버리스로 충분.
+→ **방법 A, ERP 안에 넣는다.** 주소는 ERP 하위 경로 `/tools/map/`.
+
+### 폴더
+
+```
+public/tools/map/index.html
+public/tools/map/js/…        화면 스크립트
+public/tools/map/css/…
+public/tools/map/data/…json  기관·부서 정보
+src/app/api/map/config/route.ts
+src/app/api/map/visits/route.ts
+src/lib/airtable/visits.ts   지자체 영업일지 읽기 (Airtable 호출은 여기서만)
+```
+
+### 지도 코드에서 바꿀 것
+
+- **루트 경로를 쓰지 않는다.** ERP가 이미 `/api`를 쓴다(로그인).
+  `/js/app.js` → `js/app.js`(상대 경로), `/api/config` → `/api/map/config`
+- **앱 비밀번호를 뺀다.** ERP 로그인이 대신한다
+- **브라우저에서 키를 입력·저장하는 화면을 뺀다.** 키는 Vercel 환경변수로 간다
+  - `AIRTABLE_TOKEN` — ERP 것을 그대로 쓴다(서버에서만)
+  - `NAVER_MAP_CLIENT_ID` — 새로 추가. 네이버 지도 Client ID는 원래 브라우저에
+    드러나는 값이라 비밀이 아니다. 대신 네이버 클라우드 콘솔의 **Web 서비스 URL에
+    ERP 주소를 등록**해야 그 주소에서만 지도가 뜬다
+  - `/api/map/config`가 Client ID를 내려준다
+- API는 Express/`(req, res)` 형식이 아니라 Next.js Route Handler 형식으로 옮긴다
+
+```ts
+// src/app/api/map/visits/route.ts
+import { auth } from "@/lib/auth";
+import { getVisits } from "@/lib/airtable/visits";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user.member) {
+    return Response.json({ error: "로그인이 필요하다" }, { status: 401 });
+  }
+  const result = await getVisits();
+  return result.ok
+    ? Response.json(result.data)
+    : Response.json({ error: result.message }, { status: 502 });
+}
+```
+
+### 로그인
+
+- `src/proxy.ts`가 `/tools/map/*`와 `/api/map/*`를 이미 막고 있다. 로그인 안 한
+  사람은 `/login`으로 간다. 지도 쪽에서 따로 할 일이 없다
+- API 안에서도 `auth()`로 한 번 더 확인한다(위 코드). 입구는 둘 다 막는다
+
+### 등록
+
+`프로그램` 표에 한 줄: 이름 `관공서 영업 지도` / 경로 `/tools/map/` /
+아이콘 `map-pin` / 분류 `지도` / 새창열기 체크 / 사용여부 체크.
+
+### 데이터
+
+`지자체 영업일지` 테이블을 **읽기만** 한다. CLAUDE.md §3의 "기존 테이블은 읽지도
+쓰지도 않는다"에 대한 예외로, 사용자가 결정했다. 쓰기와 `거래처` 링크 전환은
+여전히 §3 범위 밖이다.
