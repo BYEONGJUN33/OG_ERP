@@ -123,15 +123,15 @@ ERP 쪽에서 도와줄 일이 생기면 이걸 먼저 알려라.
   `AIRTABLE_VISITS_TABLE_ID` `APP_PASSWORD`. TMAP은 보류
 - Domains: `map.open-garden.co.kr` 추가
 
-### DNS — 이 주소에 필요한 것만
+### DNS — 추가할 것 없음 (2026-10-01 확인)
 
-DNS 관리 화면에 **한 줄만** 더한다. 나머지(홈페이지·`app`·메일의 MX/SPF 등)는 건드리지 않는다.
+DNS는 카페24에 있다(`ns1.cafe24.co.kr` 등). 이미 **와일드카드**가 걸려 있다 —
+`*.open-garden.co.kr` → CNAME `open-garden.co.kr` → A `216.198.79.1`(Vercel).
+그래서 `map.`도 `app.`처럼 이미 Vercel로 간다. Vercel 프로젝트의 Domains에
+주소를 넣기만 하면 그 프로젝트가 받는다. DNS는 손대지 않는다.
+메일(MX: Google)은 와일드카드와 무관하다.
 
-| 타입 | 이름 | 값 |
-|---|---|---|
-| CNAME | `map` | Vercel이 Domains 화면에 보여주는 값 (보통 `cname.vercel-dns.com.`) |
-
-`app`과 같은 방식이다. 이미 `map`이라는 이름의 레코드가 있으면 먼저 보고한다.
+새 하위 주소(`xxx.open-garden.co.kr`)를 붙일 때도 같다 — Vercel Domains에 추가만.
 
 ### 네이버 지도
 
@@ -143,8 +143,7 @@ DNS 관리 화면에 **한 줄만** 더한다. 나머지(홈페이지·`app`·�
 `프로그램` 표에 한 줄(2026-10-01 등록, 레코드 `recWhiKbm92uzhYOx`):
 이름 `관공서 영업 지도` / 경로 `https://map.open-garden.co.kr` / 아이콘 `map-pin` /
 분류 `지도` / 노출순서 30 / 새창열기 체크.
-**사용여부는 꺼 두었다** — 주소가 살기 전에 카드가 보이면 눌러도 안 열린다.
-주소가 열리는 걸 확인하면 체크 하나로 켠다. 이후 지도 업데이트는 같은 주소라
+주소가 열리는 걸 확인하고(2026-10-01, 비밀번호 화면·API 401 정상) 사용여부를 켰다. 이후 지도 업데이트는 같은 주소라
 ERP를 고칠 일이 없다.
 
 ### 회사 로그인 통합 — 지금은 안 한다
