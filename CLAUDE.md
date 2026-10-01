@@ -14,6 +14,7 @@
 
 화면 구조는 `docs/ui.md`, 시각 규칙은 `docs/design.md`에 있다.
 화면을 만들기 전에 두 파일을 읽어라.
+ERP 바깥에서 서버가 있는 프로그램을 붙일 때는 `docs/architecture.md`.
 
 ### 장기 방향 — 이건 알고 설계해라
 
